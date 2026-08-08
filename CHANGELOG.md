@@ -1,5 +1,12 @@
 # FSOS CHANGELOG
 
+## v1.0.10 — Cloudflare Dependency Sync Audit (2026-08-08)
+
+### Audited & Fixed
+- **Dependency Classification**: Moved `@tailwindcss/vite` and `@vitejs/plugin-react` from `dependencies` to `devDependencies` to prevent production build tree mismatches.
+- **Lockfile Synchronization**: Re-synced `package-lock.json` lockfileVersion 3 and verified `npm ci` and `NODE_ENV=production npm ci` pass with 100% success.
+
+
 ## v1.0.9 — Atlas Lockfile Verification (2026-08-08)
 
 ### Verified & Synchronized
