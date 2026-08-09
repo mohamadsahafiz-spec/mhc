@@ -1,6 +1,8 @@
 import { LaserEngine } from './laserEngine';
 import { ImageStore } from './imageStore';
 import { SyncEngine } from './syncEngine';
+import { TemperatureEngine } from './temperatureEngine';
+import { SavedTemperatureRecord } from '../types/temperature';
 import { 
   Customer, 
   Plant, 
@@ -131,6 +133,46 @@ function syncEnqueueList<T extends { id?: string }>(tableName: string, storageKe
   }
 }
 
+function sanitizeMachine(m: Machine): Machine {
+  if (!m) return m;
+  if (!m.temperatureRecords || !Array.isArray(m.temperatureRecords)) return m;
+
+  const sanitizedTempRecords = m.temperatureRecords.map((rec) => {
+    const rawCount = rec.rawRecordsCount || (Array.isArray(rec.records) ? rec.records.length : 0);
+    const cleanedRec: SavedTemperatureRecord = {
+      ...rec,
+      rawRecordsCount: rawCount,
+      records: [] // Strip heavy raw records array from localStorage/D1
+    };
+
+    if (cleanedRec.channelData && typeof cleanedRec.channelData === 'object') {
+      const downsampledMap: Record<number, Array<{ ts: Date; val: number }>> = {};
+      let modified = false;
+      Object.entries(cleanedRec.channelData).forEach(([chStr, pts]) => {
+        const ch = parseInt(chStr, 10);
+        if (Array.isArray(pts)) {
+          if (pts.length > 1500) {
+            downsampledMap[ch] = TemperatureEngine.downsamplePoints(pts, 1500);
+            modified = true;
+          } else {
+            downsampledMap[ch] = pts;
+          }
+        }
+      });
+      if (modified) {
+        cleanedRec.channelData = downsampledMap;
+      }
+    }
+
+    return cleanedRec;
+  });
+
+  return {
+    ...m,
+    temperatureRecords: sanitizedTempRecords
+  };
+}
+
 export const StorageService = {
   getCustomers: (): Customer[] => getStorage(KEYS.CUSTOMERS, INITIAL_CUSTOMERS),
   saveCustomers: (data: Customer[]) => {
@@ -155,14 +197,16 @@ export const StorageService = {
     if (!raw || !Array.isArray(raw) || raw.length === 0) {
       raw = INITIAL_MACHINES;
     }
-    const normalized = LaserEngine.normalizeMachines(raw) as unknown as Machine[];
+    const sanitized = raw.map(sanitizeMachine);
+    const normalized = LaserEngine.normalizeMachines(sanitized) as unknown as Machine[];
     return ImageStore.hydrateImagesSync(normalized);
   },
   saveMachines: (data: Machine[]) => {
     const processedMachines = data.map(m => {
       const recordId = m.id || `M-${Date.now()}`;
       const withId = m.id ? m : { ...m, id: recordId };
-      return ImageStore.extractAndStoreImagesSync(withId, recordId);
+      const sanitized = sanitizeMachine(withId);
+      return ImageStore.extractAndStoreImagesSync(sanitized, recordId);
     });
     syncEnqueueList('machines', KEYS.MACHINES, processedMachines);
     setStorage(KEYS.MACHINES, processedMachines);

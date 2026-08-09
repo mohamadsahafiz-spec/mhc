@@ -1,5 +1,12 @@
 # FSOS CHANGELOG
 
+## v1.0.15 — Client-Side Storage Quota Fix & Raw Telemetry IndexedDB Offloading (2026-08-09)
+
+### Quota Optimization & Local Storage Fix
+- **LocalStorage Quota Fix**: Stripped heavy `records` raw telemetry array from `SavedTemperatureRecord` inside `localStorage` and D1 sync payload, reducing per-record JSON footprint from ~60–100MB to ~150KB.
+- **IndexedDB Offloading**: Full raw temperature points offloaded to browser IndexedDB (`fsos_temperature_db`), preserving zero-data-loss auditability locally without consuming `localStorage` quota or incurring cloud storage costs.
+- **Automatic Machine Sanitization**: Integrated `sanitizeMachine` in `StorageService.getMachines()` and `StorageService.saveMachines()`, automatically downsampling time-series channels exceeding 1500 points and stripping legacy bloated records.
+
 ## v1.0.14 — Version Harmonization & Cloudflare Runtime Identity (2026-08-09)
 
 ### Version Harmonization & Identity

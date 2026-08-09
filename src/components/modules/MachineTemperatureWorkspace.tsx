@@ -27,6 +27,7 @@ import {
   ChannelStats
 } from '../../types/temperature';
 import { TemperatureEngine } from '../../utils/temperatureEngine';
+import { TempRawStore } from '../../utils/tempRawStore';
 import { TemperatureGraph, GraphPreset } from '../common/TemperatureGraph';
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
@@ -177,8 +178,19 @@ export const MachineTemperatureWorkspace: React.FC<MachineTemperatureWorkspacePr
   const handleSaveTemperatureRecord = () => {
     if (!analysisResult || !analysisResult.stats) return;
 
+    const recordId = `TR-${Date.now()}`;
+
+    // Downsample channelData points for each channel
+    const downsampledChannelData: ChannelDataMap = {};
+    if (analysisResult.resampledChannels) {
+      Object.entries(analysisResult.resampledChannels).forEach(([chStr, pts]) => {
+        const ch = parseInt(chStr, 10);
+        downsampledChannelData[ch] = TemperatureEngine.downsamplePoints(pts, 1500);
+      });
+    }
+
     const newRecord: SavedTemperatureRecord = {
-      id: `TR-${Date.now()}`,
+      id: recordId,
       machineId: machine.id,
       title: `${machine.model} Temperature Inspection (${analysisResult.sourceFileNames.length} log file${
         analysisResult.sourceFileNames.length > 1 ? 's' : ''
@@ -190,9 +202,12 @@ export const MachineTemperatureWorkspace: React.FC<MachineTemperatureWorkspacePr
       stats: analysisResult.stats,
       channelStats: analysisResult.channelStats,
       dayBoundaries: analysisResult.dayBoundaries,
-      channelData: analysisResult.resampledChannels,
-      records: analysisResult.rawRecords
+      channelData: downsampledChannelData,
+      records: []
     };
+
+    // Store full raw records in IndexedDB
+    TempRawStore.saveRawRecords(recordId, analysisResult.rawRecords);
 
     const existingRecords = machine.temperatureRecords || [];
     const updatedMachine: Machine = {
@@ -209,6 +224,7 @@ export const MachineTemperatureWorkspace: React.FC<MachineTemperatureWorkspacePr
 
   const handleDeleteSavedRecord = (recordId: string) => {
     if (!confirm('Are you sure you want to delete this temperature record?')) return;
+    TempRawStore.deleteRawRecords(recordId);
     const updatedRecords = (machine.temperatureRecords || []).filter((r) => r.id !== recordId);
     onUpdateMachine({
       ...machine,

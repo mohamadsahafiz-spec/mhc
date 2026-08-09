@@ -15,6 +15,16 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
 
   const changelog = [
     {
+      version: 'v1.0.15',
+      date: '2026-08-09',
+      type: 'Client-Side Storage Quota Optimization & Raw Telemetry IndexedDB Offloading',
+      highlights: [
+        'LOCALSTORAGE QUOTA FIX: Raw telemetry points array stripped from SavedTemperatureRecord inside localStorage and D1 sync payload.',
+        'INDEXEDDB RAW STORAGE: Full raw temperature points preserved in browser IndexedDB (fsos_temperature_db) for zero-loss auditability.',
+        'AUTOMATIC SANITIZATION: StorageService automatically sanitizes machine records on load and save, resolving QuotaExceededError for large log imports.'
+      ]
+    },
+    {
       version: 'v1.0.14',
       date: '2026-08-09',
       type: 'Version Harmonization & Runtime Deployment Identity',
@@ -588,16 +598,16 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
             <div className={`p-3 rounded-xl border font-mono font-bold text-lg ${
               isDark ? 'bg-[#8B9DFF]/15 border-[#8B9DFF]/30 text-[#8B9DFF]' : 'bg-indigo-50 border-indigo-200 text-indigo-800'
             }`}>
-              v1.0.14
+              v1.0.15
             </div>
             <div>
               <h3 className="text-base font-bold">Field Service Operations System</h3>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
-                Cloudflare Workers Runtime v1.0.14 — Native Cloud Engine & D1 Sync Foundation
+                Cloudflare Workers Runtime v1.0.15 — Native Cloud Engine & D1 Sync Foundation
               </p>
             </div>
           </div>
-          <Badge variant="blue">v1.0.14 OPERATIONAL</Badge>
+          <Badge variant="blue">v1.0.15 OPERATIONAL</Badge>
         </div>
       </Card>
 
@@ -611,7 +621,7 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
               <Tag className="w-3.5 h-3.5 text-[#8B9DFF]" />
               <span className="font-mono uppercase text-[10px]">Version</span>
             </div>
-            <p className="font-mono font-bold text-sm text-[#8B9DFF]">v1.0.14</p>
+            <p className="font-mono font-bold text-sm text-[#8B9DFF]">v1.0.15</p>
           </div>
 
           <div className={`p-3.5 rounded-xl border space-y-1 ${

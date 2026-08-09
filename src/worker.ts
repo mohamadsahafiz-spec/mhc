@@ -85,7 +85,7 @@ export default {
     if (path.startsWith("/api/")) {
       try {
         if (path === "/api/health") {
-          const version = env?.APP_VERSION || "1.0.14";
+          const version = env?.APP_VERSION || "1.0.15";
           const cfMeta = env?.CF_VERSION_METADATA;
           return json({
             status: "ok",
@@ -105,7 +105,7 @@ export default {
           if (request.method === "GET") {
             const countRes = await db.prepare("SELECT COUNT(*) as total FROM records WHERE is_deleted = 0").first();
             const serverRecordCount = Number(countRes?.total ?? 0);
-            const version = env?.APP_VERSION || "1.0.14";
+            const version = env?.APP_VERSION || "1.0.15";
             const cfMeta = env?.CF_VERSION_METADATA;
             return json({
               status: "online",

@@ -79,6 +79,7 @@ import { ImageStore } from '../../utils/imageStore';
 import { getLocalDateString } from '../../utils/timeUtils';
 import { TemperatureGraph } from '../common/TemperatureGraph';
 import { TemperatureEngine } from '../../utils/temperatureEngine';
+import { TempRawStore } from '../../utils/tempRawStore';
 import { SavedTemperatureRecord } from '../../types/temperature';
 import { LaserPowerCheckRecord, MaskSize, MASK_SPECS } from '../../types/laserPower';
 import { LaserPowerEngine } from '../../utils/laserPowerEngine';
@@ -631,9 +632,18 @@ export const SmartMhcWorkspace: React.FC<SmartMhcWorkspaceProps> = ({
       }
 
       const channelDataMap = analysisResult.resampledChannels;
-      const stats = TemperatureEngine.calculateGlobalStats(channelDataMap);
+      const downsampledChannelData: ChannelDataMap = {};
+      if (channelDataMap) {
+        Object.entries(channelDataMap).forEach(([chStr, pts]) => {
+          const ch = parseInt(chStr, 10);
+          downsampledChannelData[ch] = TemperatureEngine.downsamplePoints(pts, 1500);
+        });
+      }
+
+      const stats = TemperatureEngine.calculateGlobalStats(downsampledChannelData);
+      const recordId = `TR-${Date.now()}`;
       const newRecord: SavedTemperatureRecord = {
-        id: `TR-${Date.now()}`,
+        id: recordId,
         machineId: machine.id,
         title: fileArray.map(f => f.name).join(', '),
         createdAt: new Date().toISOString(),
@@ -643,9 +653,11 @@ export const SmartMhcWorkspace: React.FC<SmartMhcWorkspaceProps> = ({
         stats: stats || { min: 0, max: 0, avg: 0, range: 0, points: 0 },
         channelStats: analysisResult.channelStats,
         dayBoundaries: analysisResult.dayBoundaries,
-        channelData: channelDataMap,
-        records: analysisResult.rawRecords
+        channelData: downsampledChannelData,
+        records: []
       };
+
+      TempRawStore.saveRawRecords(recordId, analysisResult.rawRecords);
 
       const updatedRecords = [newRecord, ...(machine.temperatureRecords || [])];
       const updatedMachine = { ...machine, temperatureRecords: updatedRecords };
