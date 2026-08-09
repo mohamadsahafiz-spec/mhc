@@ -1,6 +1,12 @@
 export interface Env {
   DB?: any;
   ASSETS?: { fetch: (request: Request) => Promise<Response> };
+  APP_VERSION?: string;
+  CF_VERSION_METADATA?: {
+    id: string;
+    tag: string;
+    timestamp: string;
+  };
 }
 
 interface D1Record {
@@ -79,22 +85,38 @@ export default {
     if (path.startsWith("/api/")) {
       try {
         if (path === "/api/health") {
-          return json({ status: "ok", runtime: "cloudflare-workers", timestamp: new Date().toISOString() });
+          const version = env?.APP_VERSION || "1.0.14";
+          const cfMeta = env?.CF_VERSION_METADATA;
+          return json({
+            status: "ok",
+            version,
+            runtime: "cloudflare-workers",
+            cfVersionId: cfMeta?.id || null,
+            cfVersionTag: cfMeta?.tag || null,
+            cfVersionTimestamp: cfMeta?.timestamp || null,
+            timestamp: new Date().toISOString()
+          });
         }
 
-        if (path === "/api/sync" || path === "/api/sync/") {
+        if (path === "/api/sync" || path === "/api/sync/" || path === "/api/sync/status") {
           const db = await getDb(env);
           await ensureD1Table(db);
 
           if (request.method === "GET") {
             const countRes = await db.prepare("SELECT COUNT(*) as total FROM records WHERE is_deleted = 0").first();
             const serverRecordCount = Number(countRes?.total ?? 0);
+            const version = env?.APP_VERSION || "1.0.14";
+            const cfMeta = env?.CF_VERSION_METADATA;
             return json({
               status: "online",
-              endpoint: "/api/sync",
+              version,
+              endpoint: path,
               runtime: "cloudflare-workers",
               serverRecordCount,
-              serverTimestamp: new Date().toISOString()
+              serverTimestamp: new Date().toISOString(),
+              cfVersionId: cfMeta?.id || null,
+              cfVersionTag: cfMeta?.tag || null,
+              cfVersionTimestamp: cfMeta?.timestamp || null
             });
           }
 

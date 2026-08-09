@@ -1,5 +1,11 @@
 # FSOS CHANGELOG
 
+## v1.0.14 — Version Harmonization & Cloudflare Runtime Identity (2026-08-09)
+
+### Version Harmonization & Identity
+- **Version Harmonization**: Updated `package.json`, `metadata.json`, and all UI in-app version badges (`Sidebar`, `StartPageModule`, `SettingsModule`) to `v1.0.14`.
+- **Cloudflare Runtime Version Identity**: Configured `CF_VERSION_METADATA` binding and `APP_VERSION` variable in `wrangler.toml` and exposed version, `cfVersionId`, `cfVersionTag`, and `cfVersionTimestamp` via `/api/sync/status` and `/api/health`.
+
 ## v1.0.13 — D1 Performance Index Migration (2026-08-09)
 
 ### D1 Database Indexes
