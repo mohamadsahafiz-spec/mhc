@@ -1,5 +1,11 @@
 # FSOS CHANGELOG
 
+## v1.0.13 — D1 Performance Index Migration (2026-08-09)
+
+### D1 Database Indexes
+- **Versioned Migration `0001_add_indexes.sql`**: Created idempotent migration script adding `idx_records_updated_at` on `updated_at` and `idx_records_table_name` on `table_name` without altering existing table structures or data.
+- **Production Query Optimization**: Accelerates `/api/changes` delta sync queries and `/api/sync` lookups.
+
 ## v1.0.12 — Cross-Device Deletion Synchronization (2026-08-09)
 
 ### Cross-Device Deletion Sync
