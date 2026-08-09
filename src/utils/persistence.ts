@@ -98,33 +98,56 @@ function setStorage<T>(key: string, value: T): void {
   }
 }
 
-function syncEnqueueList<T extends { id?: string }>(tableName: string, items: T[]) {
+function syncEnqueueList<T extends { id?: string }>(tableName: string, storageKey: string, items: T[]) {
   if (!Array.isArray(items)) return;
+
+  // Read existing items prior to update to identify deleted records
+  const previousItems = getStorage<{ id?: string }[] | null>(storageKey, null);
+  const previousIds = new Set<string>();
+  if (Array.isArray(previousItems)) {
+    previousItems.forEach((item, idx) => {
+      if (item && item.id) {
+        previousIds.add(item.id);
+      }
+    });
+  }
+
+  const newIds = new Set<string>();
   items.forEach((item, idx) => {
     if (item) {
       const recordId = item.id || `${tableName}_${idx}`;
+      newIds.add(recordId);
       SyncEngine.enqueueChange(tableName, recordId, 'upsert', item);
     }
   });
+
+  // Enqueue deletion tombstones for any records missing from the new list
+  if (previousItems !== null) {
+    previousIds.forEach(prevId => {
+      if (!newIds.has(prevId)) {
+        SyncEngine.enqueueChange(tableName, prevId, 'delete', null);
+      }
+    });
+  }
 }
 
 export const StorageService = {
   getCustomers: (): Customer[] => getStorage(KEYS.CUSTOMERS, INITIAL_CUSTOMERS),
   saveCustomers: (data: Customer[]) => {
+    syncEnqueueList('customers', KEYS.CUSTOMERS, data);
     setStorage(KEYS.CUSTOMERS, data);
-    syncEnqueueList('customers', data);
   },
 
   getPlants: (): Plant[] => getStorage(KEYS.PLANTS, INITIAL_PLANTS),
   savePlants: (data: Plant[]) => {
+    syncEnqueueList('plants', KEYS.PLANTS, data);
     setStorage(KEYS.PLANTS, data);
-    syncEnqueueList('plants', data);
   },
 
   getLines: (): ProductionLine[] => getStorage(KEYS.LINES, INITIAL_LINES),
   saveLines: (data: ProductionLine[]) => {
+    syncEnqueueList('lines', KEYS.LINES, data);
     setStorage(KEYS.LINES, data);
-    syncEnqueueList('lines', data);
   },
 
   getMachines: (): Machine[] => {
@@ -138,70 +161,71 @@ export const StorageService = {
   saveMachines: (data: Machine[]) => {
     const processedMachines = data.map(m => {
       const recordId = m.id || `M-${Date.now()}`;
-      return ImageStore.extractAndStoreImagesSync(m, recordId);
+      const withId = m.id ? m : { ...m, id: recordId };
+      return ImageStore.extractAndStoreImagesSync(withId, recordId);
     });
+    syncEnqueueList('machines', KEYS.MACHINES, processedMachines);
     setStorage(KEYS.MACHINES, processedMachines);
-    syncEnqueueList('machines', processedMachines);
   },
 
   getContracts: (): Contract[] => getStorage(KEYS.CONTRACTS, INITIAL_CONTRACTS),
   saveContracts: (data: Contract[]) => {
+    syncEnqueueList('contracts', KEYS.CONTRACTS, data);
     setStorage(KEYS.CONTRACTS, data);
-    syncEnqueueList('contracts', data);
   },
 
   getSchedule: (): ExecutionScheduleItem[] => getStorage(KEYS.SCHEDULE, INITIAL_SCHEDULE_ITEMS),
   saveSchedule: (data: ExecutionScheduleItem[]) => {
+    syncEnqueueList('schedule', KEYS.SCHEDULE, data);
     setStorage(KEYS.SCHEDULE, data);
-    syncEnqueueList('schedule', data);
   },
 
   getMhcRecords: (): MHCRecord[] => getStorage(KEYS.MHC_RECORDS, INITIAL_MHC_RECORDS),
   saveMhcRecords: (data: MHCRecord[]) => {
+    syncEnqueueList('mhc_records', KEYS.MHC_RECORDS, data);
     setStorage(KEYS.MHC_RECORDS, data);
-    syncEnqueueList('mhc_records', data);
   },
 
   getReports: (): ExecutiveReport[] => getStorage(KEYS.REPORTS, INITIAL_EXECUTIVE_REPORTS),
   saveReports: (data: ExecutiveReport[]) => {
+    syncEnqueueList('reports', KEYS.REPORTS, data);
     setStorage(KEYS.REPORTS, data);
-    syncEnqueueList('reports', data);
   },
 
   getTasks: (): FieldEngineerTask[] => getStorage(KEYS.TASKS, INITIAL_TASKS),
   saveTasks: (data: FieldEngineerTask[]) => {
+    syncEnqueueList('tasks', KEYS.TASKS, data);
     setStorage(KEYS.TASKS, data);
-    syncEnqueueList('tasks', data);
   },
 
   getAlerts: (): AlertItem[] => getStorage(KEYS.ALERTS, INITIAL_ALERTS),
   saveAlerts: (data: AlertItem[]) => {
+    syncEnqueueList('alerts', KEYS.ALERTS, data);
     setStorage(KEYS.ALERTS, data);
-    syncEnqueueList('alerts', data);
   },
 
   getInvestigations: (): QualityInvestigation[] => getStorage(KEYS.INVESTIGATIONS, INITIAL_QUALITY_INVESTIGATIONS),
   saveInvestigations: (data: QualityInvestigation[]) => {
+    syncEnqueueList('investigations', KEYS.INVESTIGATIONS, data);
     setStorage(KEYS.INVESTIGATIONS, data);
-    syncEnqueueList('investigations', data);
   },
 
   getBaselines: (): BaselineCheck[] => getStorage(KEYS.BASELINES, INITIAL_BASELINES),
   saveBaselines: (data: BaselineCheck[]) => {
+    syncEnqueueList('baselines', KEYS.BASELINES, data);
     setStorage(KEYS.BASELINES, data);
-    syncEnqueueList('baselines', data);
   },
 
   getTemplates: (): ReportTemplate[] => getStorage(KEYS.TEMPLATES, INITIAL_REPORT_TEMPLATES),
   saveTemplates: (data: ReportTemplate[]) => {
+    syncEnqueueList('templates', KEYS.TEMPLATES, data);
     setStorage(KEYS.TEMPLATES, data);
-    syncEnqueueList('templates', data);
   },
 
   getDrafts: (): ReportDraft[] => getStorage(KEYS.DRAFTS, INITIAL_REPORT_DRAFTS),
   saveDrafts: (data: ReportDraft[]) => {
+    syncEnqueueList('drafts', KEYS.DRAFTS, data);
     setStorage(KEYS.DRAFTS, data);
-    syncEnqueueList('drafts', data);
   },
 
   getBranding: (): FounderBrandingConfig => getStorage(KEYS.BRANDING, INITIAL_FOUNDER_BRANDING),
@@ -225,26 +249,36 @@ export const StorageService = {
 
   getMhcSessions: (): MHCSession[] => getStorage(KEYS.MHC_SESSIONS, INITIAL_MHC_SESSIONS),
   saveMhcSessions: (data: MHCSession[]) => {
+    syncEnqueueList('mhc_sessions', KEYS.MHC_SESSIONS, data);
     setStorage(KEYS.MHC_SESSIONS, data);
-    syncEnqueueList('mhc_sessions', data);
   },
 
   getMhcReportDrafts: (): MHCReportDraftConfig[] => getStorage(KEYS.MHC_REPORT_DRAFTS, INITIAL_MHC_REPORT_DRAFTS),
   saveMhcReportDrafts: (data: MHCReportDraftConfig[]) => {
+    syncEnqueueList('mhc_report_drafts', KEYS.MHC_REPORT_DRAFTS, data);
     setStorage(KEYS.MHC_REPORT_DRAFTS, data);
-    syncEnqueueList('mhc_report_drafts', data);
   },
 
   getMhcWorkspaceTemplates: (): MhcWorkspaceTemplate[] => getStorage(KEYS.MHC_WORKSPACE_TEMPLATES, []),
   saveMhcWorkspaceTemplates: (data: MhcWorkspaceTemplate[]) => {
+    syncEnqueueList('mhc_workspace_templates', KEYS.MHC_WORKSPACE_TEMPLATES, data);
     setStorage(KEYS.MHC_WORKSPACE_TEMPLATES, data);
-    syncEnqueueList('mhc_workspace_templates', data);
   },
 
   getMhcWorkspaceDrafts: (): MhcWorkspaceDraft[] => getStorage(KEYS.MHC_WORKSPACE_DRAFTS, []),
   saveMhcWorkspaceDrafts: (data: MhcWorkspaceDraft[]) => {
+    syncEnqueueList('mhc_workspace_drafts', KEYS.MHC_WORKSPACE_DRAFTS, data);
     setStorage(KEYS.MHC_WORKSPACE_DRAFTS, data);
-    syncEnqueueList('mhc_workspace_drafts', data);
+  },
+
+  deleteRecord: (tableName: string, recordId: string) => {
+    SyncEngine.enqueueChange(tableName, recordId, 'delete', null);
+  },
+
+  deleteMachine: (machineId: string) => {
+    const current = StorageService.getMachines();
+    const updated = current.filter(m => m.id !== machineId);
+    StorageService.saveMachines(updated);
   },
 
   getAllLocalData: (): Record<string, any[]> => {
@@ -282,9 +316,14 @@ SyncEngine.registerRemoteUpdateCallback((tableName, remoteRecords) => {
     plants: { key: KEYS.PLANTS, get: StorageService.getPlants, save: StorageService.savePlants },
     lines: { key: KEYS.LINES, get: StorageService.getLines, save: StorageService.saveLines },
     contracts: { key: KEYS.CONTRACTS, get: StorageService.getContracts, save: StorageService.saveContracts },
+    schedule: { key: KEYS.SCHEDULE, get: StorageService.getSchedule, save: StorageService.saveSchedule },
+    mhc_records: { key: KEYS.MHC_RECORDS, get: StorageService.getMhcRecords, save: StorageService.saveMhcRecords },
     tasks: { key: KEYS.TASKS, get: StorageService.getTasks, save: StorageService.saveTasks },
+    alerts: { key: KEYS.ALERTS, get: StorageService.getAlerts, save: StorageService.saveAlerts },
     baselines: { key: KEYS.BASELINES, get: StorageService.getBaselines, save: StorageService.saveBaselines },
     investigations: { key: KEYS.INVESTIGATIONS, get: StorageService.getInvestigations, save: StorageService.saveInvestigations },
+    templates: { key: KEYS.TEMPLATES, get: StorageService.getTemplates, save: StorageService.saveTemplates },
+    drafts: { key: KEYS.DRAFTS, get: StorageService.getDrafts, save: StorageService.saveDrafts },
     mhc_report_drafts: { key: KEYS.MHC_REPORT_DRAFTS, get: StorageService.getMhcReportDrafts, save: StorageService.saveMhcReportDrafts },
     mhc_workspace_templates: { key: KEYS.MHC_WORKSPACE_TEMPLATES, get: StorageService.getMhcWorkspaceTemplates, save: StorageService.saveMhcWorkspaceTemplates },
     mhc_workspace_drafts: { key: KEYS.MHC_WORKSPACE_DRAFTS, get: StorageService.getMhcWorkspaceDrafts, save: StorageService.saveMhcWorkspaceDrafts }

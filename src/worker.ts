@@ -196,7 +196,9 @@ export default {
 
             const recordTime = new Date(rec.updatedAt).getTime() || rec.version || 0;
             if (sinceTime === 0) {
-              if (!rec.isDeleted) changes.push(rec);
+              if (!deviceIdParam || rec.deviceId !== deviceIdParam) {
+                changes.push(rec);
+              }
             } else {
               if (recordTime > sinceTime && (!deviceIdParam || rec.deviceId !== deviceIdParam)) {
                 changes.push(rec);

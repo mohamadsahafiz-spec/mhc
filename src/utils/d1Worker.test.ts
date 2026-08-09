@@ -184,6 +184,44 @@ export async function runD1WorkerTests(): Promise<{ success: boolean; log: strin
     assert(failRes.status === 500, "F. Failed D1 operation returned HTTP 500 status");
     assert(failJson.error && failJson.error.includes("D1 Database"), "F. Error details returned instead of false success");
 
+    // G. Cross-device Deletion Sync: Tombstone generation, D1 store, and propagation via /api/changes
+    mockDb.shouldFail = false;
+    const beforeDelTime = new Date(Date.now() - 1000).toISOString();
+    const deleteSyncReq = new Request("https://worker.dev/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceId: "DEV-A",
+        items: [{
+          id: "sync_del_101",
+          table: "machines",
+          recordId: "M-101",
+          action: "delete",
+          data: null,
+          updatedAt: new Date().toISOString(),
+          deviceId: "DEV-A",
+          version: Date.now()
+        }]
+      })
+    });
+    const deleteSyncRes = await worker.fetch(deleteSyncReq, env);
+    const deleteSyncJson = await deleteSyncRes.json();
+    assert(deleteSyncRes.status === 200 && deleteSyncJson.success === true, "G. Delete tombstone sync returned HTTP 200 success");
+    
+    const d1RecordG = mockDb.rows.get("machines:M-101");
+    assert(d1RecordG !== undefined && d1RecordG.is_deleted === 1, "G. Record in D1 marked as is_deleted = 1");
+
+    const readSyncDelReq = new Request("https://worker.dev/api/sync", { method: "GET" });
+    const readSyncDelRes = await worker.fetch(readSyncDelReq, env);
+    const readSyncDelJson = await readSyncDelRes.json();
+    assert(readSyncDelJson.serverRecordCount === 0, "G. Server active record count decreased to 0");
+
+    const devBChangesReq = new Request(`https://worker.dev/api/changes?since=${encodeURIComponent(beforeDelTime)}&deviceId=DEV-B`, { method: "GET" });
+    const devBChangesRes = await worker.fetch(devBChangesReq, env);
+    const devBChangesJson = await devBChangesRes.json();
+    const delRecordInChanges = devBChangesJson.changes.find((c: any) => c.recordId === "M-101");
+    assert(delRecordInChanges !== undefined && delRecordInChanges.isDeleted === true, "G. /api/changes delivered deletion tombstone to Device B");
+
   } catch (err: any) {
     log.push(`❌ EXCEPTION DURING D1 TESTS: ${err?.message || String(err)}`);
     passed = false;

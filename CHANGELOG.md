@@ -1,5 +1,13 @@
 # FSOS CHANGELOG
 
+## v1.0.12 — Cross-Device Deletion Synchronization (2026-08-09)
+
+### Cross-Device Deletion Sync
+- **Deletion Tombstone Generation**: `syncEnqueueList` compares previous local storage state against updated collections to automatically detect deleted items and enqueue `action: "delete"` tombstones.
+- **Authoritative D1 Marking**: Cloudflare Worker `/api/sync` persists tombstones to D1 with `is_deleted = 1` and `data = null`.
+- **Tombstone Propagation**: `/api/changes` delivers deletion tombstones during both incremental and full synchronization (`since=0`), ensuring deleted records do not resurrect.
+- **Offline Deletion Queueing**: Deletions performed offline are queued locally and synchronized to D1 upon network reconnection.
+
 ## v1.0.11 — Authoritative D1 Persistence (2026-08-09)
 
 ### Production Source of Truth
