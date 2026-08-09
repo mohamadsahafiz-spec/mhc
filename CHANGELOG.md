@@ -1,5 +1,12 @@
 # FSOS CHANGELOG
 
+## v1.0.11 — Authoritative D1 Persistence (2026-08-09)
+
+### Production Source of Truth
+- **Authoritative D1 Persistence**: Make D1 the authoritative server-side source of truth for FSOS records across `/api/sync`, `/api/changes`, and `/api/record`.
+- **Error Handling**: Guaranteed D1 failures or connection outages return HTTP 500 error responses rather than false success.
+- **D1 Schema Migration**: Added version-controlled `migrations/0000_init.sql` for D1 `records` table initialization.
+
 ## v1.0.10 — Cloudflare Dependency Sync Audit (2026-08-08)
 
 ### Audited & Fixed

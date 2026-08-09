@@ -20,7 +20,7 @@ interface D1Image {
   updatedAt: string;
 }
 
-const memoryDb = new Map<string, D1Record>();
+// In-memory active devices and images (image persistence to R2 is out of scope for this sprint)
 const memoryImages = new Map<string, D1Image>();
 const activeDevices = new Set<string>();
 
@@ -29,6 +29,31 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
 };
+
+async function getDb(env: Env) {
+  if (!env || !env.DB) {
+    throw new Error("[D1 Database Error]: Cloudflare D1 binding (env.DB) is not configured or unavailable.");
+  }
+  return env.DB;
+}
+
+let tableInitialized = false;
+async function ensureD1Table(db: any) {
+  if (tableInitialized) return;
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS records (
+      key TEXT PRIMARY KEY,
+      table_name TEXT NOT NULL,
+      record_id TEXT NOT NULL,
+      data TEXT,
+      updated_at TEXT NOT NULL,
+      device_id TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      is_deleted INTEGER NOT NULL DEFAULT 0
+    )
+  `).run();
+  tableInitialized = true;
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -58,12 +83,17 @@ export default {
         }
 
         if (path === "/api/sync" || path === "/api/sync/") {
+          const db = await getDb(env);
+          await ensureD1Table(db);
+
           if (request.method === "GET") {
+            const countRes = await db.prepare("SELECT COUNT(*) as total FROM records WHERE is_deleted = 0").first();
+            const serverRecordCount = Number(countRes?.total ?? 0);
             return json({
               status: "online",
               endpoint: "/api/sync",
               runtime: "cloudflare-workers",
-              serverRecordCount: memoryDb.size,
+              serverRecordCount,
               serverTimestamp: new Date().toISOString()
             });
           }
@@ -83,55 +113,87 @@ export default {
             for (const item of items) {
               if (!item.table || !item.recordId) continue;
               const key = `${item.table}:${item.recordId}`;
-              const existing = memoryDb.get(key);
+              const isDeleted = item.action === "delete" ? 1 : 0;
+              const itemData = item.action === "delete" ? null : (typeof item.data === "string" ? item.data : JSON.stringify(item.data ?? null));
+              const updatedAt = item.updatedAt || nowIso;
+              const devId = item.deviceId || deviceId || "UNKNOWN";
+              const version = item.version || Date.now();
 
-              if (!existing || (item.version && item.version >= existing.version) || item.updatedAt >= existing.updatedAt) {
-                const rec: D1Record = {
-                  table: item.table,
-                  recordId: item.recordId,
-                  data: item.action === "delete" ? null : item.data,
-                  updatedAt: item.updatedAt || nowIso,
-                  deviceId: item.deviceId || deviceId || "UNKNOWN",
-                  version: item.version || Date.now(),
-                  isDeleted: item.action === "delete"
-                };
-                memoryDb.set(key, rec);
+              // Query existing record to check version/timestamp conflict
+              const existing = await db.prepare("SELECT version, updated_at FROM records WHERE key = ?").bind(key).first();
 
-                if (env.DB) {
-                  try {
-                    await env.DB.prepare(
-                      `INSERT INTO records (key, table_name, record_id, data, updated_at, device_id, version, is_deleted)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                       ON CONFLICT(key) DO UPDATE SET
-                       data = excluded.data, updated_at = excluded.updated_at, device_id = excluded.device_id, version = excluded.version, is_deleted = excluded.is_deleted`
-                    ).bind(key, rec.table, rec.recordId, JSON.stringify(rec.data), rec.updatedAt, rec.deviceId, rec.version, rec.isDeleted ? 1 : 0).run();
-                  } catch (e) {
-                    console.warn("[Cloudflare D1 Write Error]:", e);
-                  }
+              let shouldUpdate = true;
+              if (existing) {
+                const existingVer = Number(existing.version) || 0;
+                const existingUpdated = String(existing.updated_at || "");
+                if (version < existingVer && updatedAt < existingUpdated) {
+                  shouldUpdate = false;
                 }
+              }
+
+              if (shouldUpdate) {
+                await db.prepare(
+                  `INSERT INTO records (key, table_name, record_id, data, updated_at, device_id, version, is_deleted)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(key) DO UPDATE SET
+                     data = excluded.data,
+                     updated_at = excluded.updated_at,
+                     device_id = excluded.device_id,
+                     version = excluded.version,
+                     is_deleted = excluded.is_deleted`
+                ).bind(key, item.table, item.recordId, itemData, updatedAt, devId, version, isDeleted).run();
                 processedCount++;
               }
             }
+
+            const totalRes = await db.prepare("SELECT COUNT(*) as total FROM records WHERE is_deleted = 0").first();
+            const totalServerRecords = Number(totalRes?.total ?? 0);
 
             return json({
               success: true,
               processedCount,
               serverTimestamp: nowIso,
-              totalServerRecords: memoryDb.size
+              totalServerRecords
             });
           }
         }
 
         if (path === "/api/changes") {
+          const db = await getDb(env);
+          await ensureD1Table(db);
+
           const sinceParam = url.searchParams.get("since") || "0";
           const deviceIdParam = url.searchParams.get("deviceId") || "";
 
           if (deviceIdParam) activeDevices.add(deviceIdParam);
 
           const sinceTime = sinceParam === "0" ? 0 : (new Date(sinceParam).getTime() || 0);
-          const changes: D1Record[] = [];
 
-          memoryDb.forEach((rec) => {
+          const { results } = await db.prepare(
+            `SELECT key, table_name as "table", record_id as recordId, data, updated_at as updatedAt, device_id as deviceId, version, is_deleted as isDeleted FROM records`
+          ).all();
+
+          const changes: D1Record[] = [];
+          for (const row of (results || [])) {
+            let parsedData = null;
+            if (row.data) {
+              try {
+                parsedData = typeof row.data === "string" ? JSON.parse(row.data) : row.data;
+              } catch {
+                parsedData = row.data;
+              }
+            }
+
+            const rec: D1Record = {
+              table: row.table as string,
+              recordId: row.recordId as string,
+              data: parsedData,
+              updatedAt: row.updatedAt as string,
+              deviceId: row.deviceId as string,
+              version: Number(row.version),
+              isDeleted: Boolean(row.isDeleted)
+            };
+
             const recordTime = new Date(rec.updatedAt).getTime() || rec.version || 0;
             if (sinceTime === 0) {
               if (!rec.isDeleted) changes.push(rec);
@@ -140,12 +202,15 @@ export default {
                 changes.push(rec);
               }
             }
-          });
+          }
+
+          const countRes = await db.prepare("SELECT COUNT(*) as total FROM records WHERE is_deleted = 0").first();
+          const serverRecordCount = Number(countRes?.total ?? 0);
 
           return json({
             success: true,
             serverTimestamp: new Date().toISOString(),
-            serverRecordCount: memoryDb.size,
+            serverRecordCount,
             changes
           });
         }
@@ -179,6 +244,9 @@ export default {
         }
 
         if (path === "/api/record") {
+          const db = await getDb(env);
+          await ensureD1Table(db);
+
           const body: any = await request.json().catch(() => ({}));
           const { table, recordId, deviceId, action } = body;
           if (!table || !recordId) {
@@ -186,28 +254,37 @@ export default {
           }
 
           const key = `${table}:${recordId}`;
-          const isDeleted = action === "delete" || request.method === "DELETE";
+          const isDeleted = action === "delete" || request.method === "DELETE" ? 1 : 0;
+          const updatedAt = new Date().toISOString();
+          const devId = deviceId || "UNKNOWN";
+          const version = Date.now();
+          const recordData = isDeleted ? null : (typeof body.data === "string" ? body.data : JSON.stringify(body.data ?? null));
 
-          const rec: D1Record = {
-            table,
-            recordId,
-            data: isDeleted ? null : body.data,
-            updatedAt: new Date().toISOString(),
-            deviceId: deviceId || "UNKNOWN",
-            version: Date.now(),
-            isDeleted
-          };
+          await db.prepare(
+            `INSERT INTO records (key, table_name, record_id, data, updated_at, device_id, version, is_deleted)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(key) DO UPDATE SET
+               data = excluded.data,
+               updated_at = excluded.updated_at,
+               device_id = excluded.device_id,
+               version = excluded.version,
+               is_deleted = excluded.is_deleted`
+          ).bind(key, table, recordId, recordData, updatedAt, devId, version, isDeleted).run();
 
-          memoryDb.set(key, rec);
-
-          return json({ success: true, table, recordId, isDeleted });
+          return json({ success: true, table, recordId, isDeleted: Boolean(isDeleted) });
         }
 
         if (path === "/api/sync/status") {
+          const db = await getDb(env);
+          await ensureD1Table(db);
+
+          const countRes = await db.prepare("SELECT COUNT(*) as total FROM records WHERE is_deleted = 0").first();
+          const serverRecordCount = Number(countRes?.total ?? 0);
+
           return json({
             status: "online",
             runtime: "cloudflare-workers",
-            serverRecordCount: memoryDb.size,
+            serverRecordCount,
             totalStoredImages: memoryImages.size,
             activeDevices: Array.from(activeDevices),
             serverTimestamp: new Date().toISOString()
@@ -216,7 +293,8 @@ export default {
 
         return json({ error: `API route not found: ${request.method} ${path}` }, 404);
       } catch (err: any) {
-        return json({ error: err?.message || "Internal Worker Error" }, 500);
+        console.error("[Worker API Error]:", err);
+        return json({ error: err?.message || "Internal Worker D1 Error" }, 500);
       }
     }
 
