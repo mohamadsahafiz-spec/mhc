@@ -13,7 +13,6 @@ import {
   Contract, 
   ExecutionScheduleItem, 
   MHCRecord, 
-  ExecutiveReport, 
   FieldEngineerTask, 
   AlertItem, 
   QualityInvestigation, 
@@ -45,7 +44,6 @@ import { MachineHealthCheckModule } from './components/modules/MachineHealthChec
 import { LaserCalibrationModule } from './components/modules/LaserCalibrationModule';
 import { BaselineCheckModule } from './components/modules/BaselineCheckModule';
 import { QualityInvestigationModule } from './components/modules/QualityInvestigationModule';
-import { ReportsModule } from './components/modules/ReportsModule';
 import { AnalyticsModule } from './components/modules/AnalyticsModule';
 import { KnowledgeBaseModule } from './components/modules/KnowledgeBaseModule';
 import { UsersModule } from './components/modules/UsersModule';
@@ -69,7 +67,6 @@ function AppLayout() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [schedule, setSchedule] = useState<ExecutionScheduleItem[]>([]);
   const [mhcRecords, setMhcRecords] = useState<MHCRecord[]>([]);
-  const [reports, setReports] = useState<ExecutiveReport[]>([]);
   const [tasks, setTasks] = useState<FieldEngineerTask[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [investigations, setInvestigations] = useState<QualityInvestigation[]>([]);
@@ -124,7 +121,6 @@ function AppLayout() {
     setContracts(StorageService.getContracts());
     setSchedule(StorageService.getSchedule());
     setMhcRecords(StorageService.getMhcRecords());
-    setReports(StorageService.getReports());
     setTasks(StorageService.getTasks());
     setAlerts(StorageService.getAlerts());
     setInvestigations(StorageService.getInvestigations());
@@ -145,7 +141,6 @@ function AppLayout() {
     const unsubscribeSync = SyncEngine.subscribe(() => {
       setMachines(StorageService.getMachines());
       setMhcRecords(StorageService.getMhcRecords());
-      setReports(StorageService.getReports());
       setCustomers(StorageService.getCustomers());
       setPlants(StorageService.getPlants());
       setLines(StorageService.getLines());
@@ -190,7 +185,7 @@ function AppLayout() {
 
     // Auto-redirect to start page if current active tab is not visible in MHC Mode
     if (newMode === 'MHC_MODE') {
-      const mhcAllowedTabs: NavigationTab[] = ['start_page', 'workflow_guide', 'machines', 'mhc', 'reports', 'profile'];
+      const mhcAllowedTabs: NavigationTab[] = ['start_page', 'workflow_guide', 'machines', 'mhc_autopilot', 'mhc', 'mhc_history', 'profile'];
       if (!mhcAllowedTabs.includes(activeTab)) {
         setActiveTab('start_page');
       }
@@ -335,12 +330,6 @@ function AppLayout() {
     StorageService.saveMhcRecords(updated);
   };
 
-  const handleGenerateExecutiveReport = (report: ExecutiveReport) => {
-    const updated = [report, ...reports];
-    setReports(updated);
-    StorageService.saveReports(updated);
-  };
-
   const handleToggleTask = (taskId: string) => {
     const updated = tasks.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t));
     setTasks(updated);
@@ -419,15 +408,11 @@ function AppLayout() {
               <MHCModeHome
                 machines={machines}
                 mhcRecords={mhcRecords}
-                reports={reports}
                 selectedMachineId={selectedMachineId}
                 onSelectMachine={(id) => setSelectedMachineId(id)}
                 onOpenMhcInspection={(id) => {
                   setSelectedMachineId(id);
                   setActiveTab('mhc');
-                }}
-                onViewReport={(reportId) => {
-                  setActiveTab('reports');
                 }}
                 onAddMachine={() => {
                   setActiveTab('machines');
@@ -512,7 +497,6 @@ function AppLayout() {
               selectedMachineId={selectedMachineId}
               onSelectMachine={setSelectedMachineId}
               mhcRecords={mhcRecords}
-              reports={reports}
               onOpenMhcForMachine={(id) => {
                 setSelectedMachineId(id);
                 setActiveTab('mhc');
@@ -533,7 +517,6 @@ function AppLayout() {
               initialMachineId={selectedMachineId}
               activeSubTab={activeTab}
               onSaveMhcRecord={handleSaveMhcRecord}
-              onGenerateReport={handleGenerateExecutiveReport}
               onUpdateMachine={handleEditMachine}
             />
           )}
@@ -552,10 +535,6 @@ function AppLayout() {
               machines={machines}
               onAddInvestigation={handleAddInvestigation}
             />
-          )}
-
-          {activeTab === 'reports' && (
-            <ReportsModule reports={reports} />
           )}
 
           {activeTab === 'analytics' && (

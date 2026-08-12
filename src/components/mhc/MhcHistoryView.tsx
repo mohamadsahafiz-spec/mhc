@@ -9,7 +9,7 @@ interface MhcHistoryViewProps {
   sessions: MHCSession[];
   machines: Machine[];
   onOpenSmartWorkspace: (sessionId: string) => void;
-  onOpenStageForm: (sessionId: string, stageNum: number) => void;
+  onOpenStageForm?: (sessionId: string, stageNum: number) => void;
 }
 
 export const MhcHistoryView: React.FC<MhcHistoryViewProps> = ({
@@ -140,7 +140,7 @@ export const MhcHistoryView: React.FC<MhcHistoryViewProps> = ({
                       size="sm"
                       className="text-xs"
                       icon={<ArrowRight className="w-3.5 h-3.5" />}
-                      onClick={() => onOpenStageForm(s.id, s.currentSection || 1)}
+                      onClick={() => onOpenStageForm ? onOpenStageForm(s.id, s.currentSection || 1) : onOpenSmartWorkspace(s.id)}
                     >
                       Continue Inspection
                     </Button>

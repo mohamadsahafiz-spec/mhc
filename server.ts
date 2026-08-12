@@ -213,6 +213,49 @@ async function startServer() {
     });
   });
 
+  // 7. AI Finding Assistance (POST /api/generate-finding)
+  app.post("/api/generate-finding", express.json(), async (req, res) => {
+    try {
+      const { component, conditions, actionRecommendation, engineerNote } = req.body || {};
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (apiKey) {
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `Convert these optical/mechanical laser inspection facts into a professional technical report summary (1-2 clear sentences).
+Facts:
+- Component: ${component || 'Not specified'}
+- Observed Damage/Conditions: ${Array.isArray(conditions) ? conditions.join(', ') : 'None'}
+- Action / Recommendation: ${actionRecommendation || 'None'}
+- Engineer Note: ${engineerNote || 'None'}
+
+Rules:
+1. Use ONLY the facts provided. Do NOT invent measurements, causes, or unrecorded damage.
+2. Return ONLY the final professional report wording without commentary or bullet points.`;
+
+        const result = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        });
+
+        const text = result?.text?.trim();
+        if (text) {
+          return res.json({ wording: text });
+        }
+      }
+
+      // Local fallback if no API key or empty response
+      const condStr = Array.isArray(conditions) && conditions.length > 0 ? conditions.join(', ').toLowerCase() : 'observed issue';
+      const fallback = `Inspection of ${component || 'component'} revealed ${condStr}.${engineerNote ? ` Observation: ${engineerNote}.` : ''} Action taken/recommended: ${actionRecommendation || 'Review required'}.`;
+      res.json({ wording: fallback });
+    } catch (err: any) {
+      console.warn('[AI Generate Finding Warning]:', err?.message);
+      res.json({ 
+        wording: `Inspection of ${req.body?.component || 'component'} revealed ${Array.isArray(req.body?.conditions) ? req.body.conditions.join(', ') : 'observed issue'}. Action: ${req.body?.actionRecommendation || 'Review required'}.`
+      });
+    }
+  });
+
   // Catch-all 404 handler for unhandled /api/* requests to ensure JSON is always returned instead of HTML
   app.all("/api/*", (req, res) => {
     res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });

@@ -185,7 +185,9 @@ export const MachineTemperatureWorkspace: React.FC<MachineTemperatureWorkspacePr
     if (analysisResult.resampledChannels) {
       Object.entries(analysisResult.resampledChannels).forEach(([chStr, pts]) => {
         const ch = parseInt(chStr, 10);
-        downsampledChannelData[ch] = TemperatureEngine.downsamplePoints(pts, 1500);
+        if (Array.isArray(pts)) {
+          downsampledChannelData[ch] = TemperatureEngine.downsamplePoints(pts, 1500);
+        }
       });
     }
 

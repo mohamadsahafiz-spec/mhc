@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Building2, Image, ShieldCheck, Check, Sparkles } from 'lucide-react';
-import { FounderBrandingConfig } from '../../../types';
-import { Button } from '../../common/Button';
-import { useTheme } from '../../../context/ThemeContext';
+import { FounderBrandingConfig } from '../../types';
+import { Button } from './Button';
+import { useTheme } from '../../context/ThemeContext';
 
 interface FounderBrandingModalProps {
   isOpen: boolean;

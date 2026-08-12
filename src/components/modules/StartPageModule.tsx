@@ -76,7 +76,7 @@ export const StartPageModule: React.FC<StartPageModuleProps> = ({
                   ? 'bg-[#8B9DFF]/15 text-[#8B9DFF] border-[#8B9DFF]/30' 
                   : 'bg-indigo-50 text-indigo-800 border-indigo-200'
               }`}>
-                OPERATIONAL HOME PAGE • v1.0.15
+                OPERATIONAL HOME PAGE • v1.0.18
               </span>
               <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

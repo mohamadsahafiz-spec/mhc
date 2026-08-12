@@ -1,7 +1,7 @@
 {
   "name": "react-example",
   "private": true,
-  "version": "1.0.15",
+  "version": "1.0.30",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
@@ -16,6 +16,8 @@
     "@google/genai": "^2.4.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
@@ -32,6 +34,7 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "vitest": "^4.1.10"
   }
 }

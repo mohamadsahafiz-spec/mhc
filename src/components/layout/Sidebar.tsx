@@ -29,7 +29,7 @@ import {
   Sparkles,
   LayoutTemplate,
   History,
-  FolderTree,
+  Bot,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
@@ -82,11 +82,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     localStorage.setItem('fsos_sidebar_collapsed', String(nextState));
   };
 
-  // Engineering Data sub-collapse state
-  const [isEngDataOpen, setIsEngDataOpen] = useState<boolean>(() => {
-    return activeTab.startsWith('mhc_0');
-  });
-
   const rawNavGroups: NavGroup[] = [
     {
       key: 'daily_work',
@@ -101,17 +96,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       key: 'mhc_category',
       title: 'MACHINE HEALTH CHECK',
       items: [
-        { id: 'mhc', label: '★ Smart MHC Workspace', icon: <Sparkles className="w-4 h-4 text-[#8B9DFF]" /> },
-        { id: 'mhc_templates', label: 'Report Templates', icon: <LayoutTemplate className="w-4 h-4 text-sky-400" /> },
+        { id: 'mhc_autopilot', label: '★ MHC Autopilot', icon: <Bot className="w-4 h-4 text-cyan-400" /> },
+        { id: 'mhc', label: 'Canvas / Workspace', icon: <Sparkles className="w-4 h-4 text-[#8B9DFF]" /> },
         { id: 'mhc_history', label: 'MHC History', icon: <History className="w-4 h-4 text-emerald-400" /> },
-        { id: 'mhc_01', label: '01 Current Laser Hour', icon: <Clock className="w-4 h-4 text-sky-400" />, isSubItem: true },
-        { id: 'mhc_02', label: '02 Laser Profile / Product', icon: <Sliders className="w-4 h-4 text-purple-400" />, isSubItem: true },
-        { id: 'mhc_03', label: '03 Laser Output & Power', icon: <Zap className="w-4 h-4 text-amber-400" />, isSubItem: true },
-        { id: 'mhc_04', label: '04 Optics & Beam Profile', icon: <Eye className="w-4 h-4 text-indigo-400" />, isSubItem: true },
-        { id: 'mhc_05', label: '05 Cooling System', icon: <Thermometer className="w-4 h-4 text-cyan-400" />, isSubItem: true },
-        { id: 'mhc_06', label: '06 Product Quality / Visual', icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />, isSubItem: true },
-        { id: 'mhc_07', label: '07 Spare Parts & Consumable', icon: <Package className="w-4 h-4 text-orange-400" />, isSubItem: true },
-        { id: 'mhc_08', label: '08 Engineer Remarks', icon: <FileText className="w-4 h-4 text-rose-400" />, isSubItem: true },
       ]
     },
     {
@@ -123,7 +110,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'baseline_check', label: 'Baseline Checks', icon: <SlidersHorizontal className="w-4 h-4" /> },
         { id: 'quality_investigation', label: 'Quality Investigation', icon: <AlertOctagon className="w-4 h-4" />, badge: urgentAlertsCount },
         { id: 'planner', label: 'Execution Planner', icon: <CalendarDays className="w-4 h-4" /> },
-        { id: 'reports', label: 'Executive Reports', icon: <FileBarChart className="w-4 h-4" /> },
       ]
     },
     {
@@ -162,9 +148,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (group.key === 'daily_work') {
       allowedIds = ['start_page', 'mission_control'];
     } else if (group.key === 'mhc_category') {
-      allowedIds = ['mhc', 'mhc_templates', 'mhc_history', 'mhc_01', 'mhc_02', 'mhc_03', 'mhc_04', 'mhc_05', 'mhc_06', 'mhc_07', 'mhc_08'];
+      allowedIds = ['mhc_autopilot', 'mhc', 'mhc_history'];
     } else if (group.key === 'service_execution') {
-      allowedIds = ['machines', 'reports'];
+      allowedIds = ['machines'];
     } else if (group.key === 'system') {
       allowedIds = ['profile', 'settings'];
     }
@@ -201,9 +187,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ...prev,
         [activeGroup.key]: true
       }));
-    }
-    if (activeTab.startsWith('mhc_0')) {
-      setIsEngDataOpen(true);
     }
   }, [activeTab]);
 
@@ -295,8 +278,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const hasActiveChild = group.items.some(i => i.id === activeTab);
           const groupBadgeCount = group.items.reduce((sum, item) => sum + (item.badge || 0), 0);
 
-          const mainItems = group.items.filter(i => !i.isSubItem);
-          const subItems = group.items.filter(i => i.isSubItem);
+          const mainItems = group.items;
 
           return (
             <div key={group.key} className="space-y-1">
@@ -367,53 +349,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </button>
                     );
                   })}
-
-                  {/* Collapsed Sub-Group for Engineering Data (01-08) */}
-                  {subItems.length > 0 && !isCollapsed && (
-                    <div className="pt-1.5">
-                      <button
-                        onClick={() => setIsEngDataOpen(!isEngDataOpen)}
-                        className={`w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                          activeTab.startsWith('mhc_0')
-                            ? isDark ? 'text-amber-400 font-bold' : 'text-amber-800 font-bold'
-                            : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <FolderTree className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Engineering Data</span>
-                        </div>
-                        {isEngDataOpen ? <ChevronDown className="w-3 h-3 opacity-70" /> : <ChevronRight className="w-3 h-3 opacity-70" />}
-                      </button>
-
-                      {isEngDataOpen && (
-                        <div className="pl-3 mt-1 space-y-0.5 border-l border-amber-500/30 ml-2">
-                          {subItems.map((sItem) => {
-                            const isSubActive = activeTab === sItem.id;
-                            return (
-                              <button
-                                key={sItem.id}
-                                onClick={() => setActiveTab(sItem.id)}
-                                className={`w-full flex items-center gap-2 px-2 py-1 rounded text-[11px] transition-all ${
-                                  isSubActive
-                                    ? isDark
-                                      ? 'bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/40'
-                                      : 'bg-amber-100 text-amber-900 font-semibold border border-amber-300'
-                                    : isDark
-                                    ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
-                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                                }`}
-                              >
-                                <span className="shrink-0">{sItem.icon}</span>
-                                <span className="truncate text-left">{sItem.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                 </div>
               )}
             </div>
@@ -431,10 +366,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>FSO Engine</span>
             </div>
-            <span className="font-semibold text-slate-700 dark:text-slate-300">v1.0.15</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">v1.0.28</span>
           </>
         ) : (
-          <span className="w-2 h-2 rounded-full bg-emerald-500 mx-auto" title="FSO Engine Online v1.0.15" />
+          <span className="w-2 h-2 rounded-full bg-emerald-500 mx-auto" title="FSO Engine Online v1.0.28" />
         )}
       </div>
     </aside>

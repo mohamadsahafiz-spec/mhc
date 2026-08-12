@@ -71,6 +71,7 @@ import {
   MHCCustomField
 } from '../../types';
 import { Badge } from '../common/Badge';
+import { ChannelDataMap } from '../../types/temperature';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
 import { useTheme } from '../../context/ThemeContext';

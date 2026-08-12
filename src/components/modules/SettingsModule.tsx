@@ -15,6 +15,155 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
 
   const changelog = [
     {
+      version: 'v1.0.28',
+      date: '2026-08-12',
+      type: 'Phase 7 — MHC Readiness Review (Day 4)',
+      highlights: [
+        'MHC AUTHORITATIVE SESSION AUDIT: Performs comprehensive live readiness audit across all Day 1–3 engineering activities (01 through 06) without modifying or duplicating underlying session data.',
+        'DERIVED AUDIT MATRIX: Dynamically evaluates Laser Hours, Head 1 & 2 Power, Beam Profile, Optical Inspections & Findings, Stage 1 & 2 Calibration, AGC 1 & 2, and Temperature Telemetry.',
+        'READINESS STATE CATEGORIZATION: Clearly classifies session status into 🟢 READY FOR REPORT or 🟠 ATTENTION REQUIRED with explicit blocker counts and next actionable steps.',
+        'INTERACTIVE DIRECT NAVIGATION: Every audit row and blocker item is clickable, allowing instant jump navigation back to the relevant activity to resolve issues.',
+        'REPORT GATE ENFORCEMENT: Locks Activity 08 Report Generation until all required engineering activities pass without blockers; automatically unlocks Activity 08 when readiness criteria are satisfied.',
+        'NON-BLOCKING OPTIONAL EVIDENCE: Correctly treats optional attachments as non-blocking items, ensuring engineers are never stuck on optional evidence.'
+      ]
+    },
+    {
+      version: 'v1.0.27',
+      date: '2026-08-12',
+      type: 'Phase 6 — Temperature & Evidence Integration (Day 3)',
+      highlights: [
+        'PROTECTED TEMPERATURE ENGINE INTEGRATION: Directly connects the proven TemperatureEngine log parser and analysis pipeline into Autopilot without rewriting or duplicating code.',
+        'AUTOMATIC LOG ANALYSIS & PASSPORT RECORDING: Parses raw .log/.txt telemetry files or attaches saved Machine Passport records into the active MHC session.',
+        'AUTHORITATIVE SUMMARY DASHBOARD: Displays concise global thermal statistics (Min, Max, Avg, Delta) and Station 1–6 channel breakdowns inside Autopilot.',
+        'CANVAS JUMP ACTION: Provides direct "Open Interactive Temperature Canvas" action button for deep chart analysis.',
+        'LIGHTWEIGHT AUTHORITATIVE EVIDENCE COLLECTION: Supports attaching and linking inspection images, calibration documents, and temperature evidence to the session.',
+        'DAY 3 COMPLETION & DAY 4 READINESS UNLOCK: Completing Activity 06 automatically unlocks Day 4 MHC Readiness Review (07) while keeping Report Generation locked.'
+      ]
+    },
+    {
+      version: 'v1.0.26',
+      date: '2026-08-12',
+      type: 'Phase 5 — AGC Autopilot (Day 3)',
+      highlights: [
+        'INDEPENDENT AGC 1 & AGC 2 WORKSPACES: Dedicated final-result entry workspaces for AGC 1 and AGC 2 scanners/laser heads with independent tracking.',
+        'FULL INDEX 0–5 RECORDING: Captures final X and Y deviation results in µm for all 6 indices (Index 0 through 5).',
+        'REAL-TIME ±3.0 µm SPECIFICATION ENGINE: Computes Max Abs X, Max Abs Y, and Overall Max Deviation against the ±3.0 µm tolerance limit.',
+        'POKA-YOKE SPEC ENFORCEMENT: Values outside ±3.0 µm trigger OUT OF SPEC state, block PASS completion, and flag stage as NEEDS_REVIEW.',
+        'SCANNER CONDITION WARNING: Out-of-spec readings flag "Scanner calibration outside specification — scanner condition requires engineering attention" with 2-year planning datum advisory.',
+        'RE-RUN REVISION & OPTIONAL EVIDENCE: Allows re-entry for physical re-run verifications and optional external AGC report image attachment.',
+        'DAY 3 ADVANCEMENT: Dual PASS on AGC 1 & AGC 2 automatically marks 05 AGC COMPLETED and unlocks Day 3 Temperature & Evidence (06).'
+      ]
+    },
+    {
+      version: 'v1.0.25',
+      date: '2026-08-12',
+      type: 'Phase 4 — Stage Calibration Autopilot (Day 2)',
+      highlights: [
+        'INDEPENDENT STAGE 1 & STAGE 2 WORKSPACES: Authoritative final-result calibration entry workspaces for Stage 1 and Stage 2 with independent status tracking and tab switching.',
+        'X/Y MIN & MAX DEVIATION RECORDING: Captures X Min, X Max, Y Min, and Y Max deviation readings in µm per stage.',
+        'REAL-TIME SPECIFICATION ASSESSMENT (±2.0 µm): Automatically calculates Max Abs X, Max Abs Y, and Overall Max Deviation against the ±2.0 µm tolerance benchmark.',
+        'POKA-YOKE SPEC ENFORCEMENT: Exceeding ±2.0 µm triggers OUT OF SPEC state, marks stage NEEDS_REVIEW, and prevents granting PASS status.',
+        'RE-RUN CORRECTION & OPTIONAL EVIDENCE: Supports physical re-run entry revisions and optional external calibration report image attachment.',
+        'AUTOPILOT DAY 3 ADVANCEMENT: Unlocks Day 3 AGC upon completing both Stage 1 and Stage 2 calibration with PASS.'
+      ]
+    },
+    {
+      version: 'v1.0.24',
+      date: '2026-08-12',
+      type: 'Day 1 Autopilot Integration + Poka-Yoke Hardening',
+      highlights: [
+        'SESSION RESUME & HYDRATION: Verified seamless session progress, measurements, findings, and Journey Rail state restoration upon reload/reopen.',
+        'HEAD INDEPENDENCE: Strictly decoupled Laser Head 1 and Laser Head 2 inspection findings and completion status; Day 1 requires both heads to satisfy requirements before advancing.',
+        'NEEDS REVIEW PROPAGATION: Reopening or editing earlier completed activities flags downstream dependent steps as NEEDS_REVIEW until re-verified.',
+        'POKA-YOKE HARDENING: Enforced strict validation across required fields, out-of-spec power/beam handling, and material engineering constraints without introducing artificial blockers.',
+        'DAY 1 COMPLETION & DAY 2 TRANSITION: Seamless transition to Day 2 actionable state upon completing all Day 1 activities while keeping Stage Calibration locked until Day 2.'
+      ]
+    },
+    {
+      version: 'v1.0.23',
+      date: '2026-08-12',
+      type: 'Phase 3D — Optical / Mechanical Inspection + Findings',
+      highlights: [
+        'INDEPENDENT LASER HEAD INSPECTIONS: Allows recording optical/mechanical inspection findings independently for Laser Head 1 and Laser Head 2 with dedicated completion tracking.',
+        'FAST NO-ISSUE PATH & PROGRESSIVE FOLLOW-UPS: Directly completes clean laser heads with one-click "No issue found", or activates progressive component damage follow-ups when an issue is reported.',
+        'RELEVANT OPTICAL COMPONENTS & DAMAGE SELECTION: Supports cameras, TC lens, scanner lenses, transmitting optics, and custom components paired with multi-select damage conditions and action recommendations.',
+        'ENGINEERING RULE ENFORCEMENT: Enforces known constraint that burned transmitting optics cannot be restored by cleaning and require replacement.',
+        'AI FINDING ASSISTANCE: Provides controlled "Generate Finding Wording" assistance to convert facts into editable report-ready summaries without blocking offline execution.'
+      ]
+    },
+    {
+      version: 'v1.0.22',
+      date: '2026-08-12',
+      type: 'Phase 3C — Beam Profile / Mode Autopilot',
+      highlights: [
+        'SIDE-BY-SIDE BEAM WORKSPACE: Interactive measurement workspace displaying Laser Head 1 and Laser Head 2 side-by-side across 8 measurement stations (Laser Source, After Optics, Index Masks 0–5).',
+        'DATA CAPTURE & HISTORICAL BASELINE: Captures current beam diameters, computes PASS/FAIL against BeamProfileEngine specifications, and calculates Delta mm and Delta % against historical machine records.',
+        'OPTIONAL EVIDENCE IMAGE ATTACHMENT: Preserves real uploaded beam profile evidence images without forcing evidence upload (missing image does not block completion).',
+        'POKA-YOKE & OUT-OF-SPEC VALIDATION: Enforces complete, valid numeric beam diameter measurements for all 16 stations and flags out-of-spec values before allowing Journey Rail advancement.',
+        'AUTHORITATIVE PERSISTENCE: Saves evaluated BeamProfileCheckRecord directly to the active MHC session model and Machine Passport record.'
+      ]
+    },
+    {
+      version: 'v1.0.21',
+      date: '2026-08-12',
+      type: 'Phase 3B — Laser Power Autopilot',
+      highlights: [
+        'SIDE-BY-SIDE POWER WORKSPACE: Replaced manual report entry with a fast engineering measurement workspace displaying Laser Head 1 and Laser Head 2 side-by-side.',
+        '8 MEASUREMENT POINTS PER HEAD: Measures Laser Source, After Optics, and Index Masks 0 through 5 using native LaserPowerEngine and MASK_SPECS constants.',
+        'PREVIOUS VS CURRENT BASELINE COMPARISON: Automatically retrieves the most relevant historical MHC record for the machine and displays previous values, Delta W, and Delta %.',
+        'POKA-YOKE & OUT-OF-SPEC VALIDATION: Instantly evaluates entered values, flags out-of-spec or invalid measurements, and enforces complete resolution before marking Activity 02 Power COMPLETED.',
+        'AUTHORITATIVE SESSION PERSISTENCE: Saves validated power check records into the MHC session model and Machine Passport while updating the Journey Rail status.'
+      ]
+    },
+    {
+      version: 'v1.0.20',
+      date: '2026-08-12',
+      type: 'Phase 3A — Day 1 Laser Hours Autopilot',
+      highlights: [
+        'DAY 1 LASER HOURS INTEGRATION: Connected Machine Passport data and native LaserEngine to Autopilot so Laser Hours becomes the first real engineering activity.',
+        'DUAL LASER HEAD DISCOVERY: Automatically retrieves and displays operating hours, baseline records, operating deltas, and lifecycle health for Laser Head 1 and Laser Head 2.',
+        'ENGINEER VERIFICATION & RECALIBRATION: Allows engineers to confirm retrieved readings or record recalibrated/adjusted operating hours for offline runtime without destroying original source info.',
+        'COMPLETION GATE & JOURNEY RAIL: Requires verification of both laser heads before marking Activity 01 COMPLETED, automatically advancing Autopilot progress and unlocking downstream activities.'
+      ]
+    },
+    {
+      version: 'v1.0.19',
+      date: '2026-08-12',
+      type: 'MHC Autopilot Session Brain Sprint',
+      highlights: [
+        'SESSION BRAIN ENGINE: Built persistent session/progress layer tracking Customer, Machine, MHC Session ID, Start Date, Current Day, Active Activity, and Readiness Score across Days 1–4.',
+        'ACTIVITY STATE ARCHITECTURE: Tracks atomic status per activity (✓ COMPLETED, ◉ CURRENT / IN PROGRESS, ⚠ NEEDS REVIEW, ○ UPCOMING, 🔒 LOCKED).',
+        'JOURNEY RAIL BRAIN: Interactive Journey Rail displays real-time status tree indicators and supports direct jump navigation to any unlocked or completed activity.',
+        'READINESS MODEL: Lightweight readiness calculator computes completed count, incomplete count, needs review items, next actionable activity, and core engineering report readiness.',
+        'READ-ONLY REVIEW MODE: "Review Progress" allows inspection of session state and readiness without mutating session data.',
+        'SESSION RECOVERY & START NEW: Start New creates genuinely new sessions without overwriting existing sessions, while Continue Existing restores exact progress.'
+      ]
+    },
+    {
+      version: 'v1.0.18',
+      date: '2026-08-12',
+      type: 'MHC Journey Rail Correction Sprint',
+      highlights: [
+        'JOURNEY RAIL STRUCTURE: Corrected MHC Autopilot Journey Rail labels and hierarchy to reflect the actual multi-day MHC workflow.',
+        'DAY 1: 01 Laser Hours, 02 Laser Head 1 (Power, Beam Profile / Mode, Inspection / Findings), 03 Laser Head 2 (Power, Beam Profile / Mode, Inspection / Findings).',
+        'DAY 2: 04 Stage Calibration (Stage 1, Stage 2).',
+        'DAY 3: 05 AGC (AGC 1, AGC 2), 06 Temperature & Evidence.',
+        'DAY 4: 07 MHC Readiness Review, 08 Report Generation, 09 Buyoff / Complete.',
+        'PLANNED / LOCKED ACTIVITIES: Activities are visually planned/locked on the Journey Rail without adding measurement logic yet, preserving setup flows and canvas engines intact.'
+      ]
+    },
+    {
+      version: 'v1.0.17',
+      date: '2026-08-12',
+      type: 'MHC Autopilot Foundation Sprint',
+      highlights: [
+        'MHC AUTOPILOT ENTRY: Introduced MHC Autopilot as the primary Machine Health Check experience asking ONE focused question at a time.',
+        'MHC JOURNEY RAIL: Introduced the Journey Rail status model (completed, current, needs review, upcoming) supporting setup and planned activities.',
+        'SESSION RECOVERY & DETECTION: Auto-detects existing incomplete sessions with options to Continue Existing, Start New, or Review Progress without data loss.',
+        'CANVAS INTEGRATION: Retained full Smart MHC Workspace canvas accessibility under "Canvas / Workspace" without modifying existing engines.'
+      ]
+    },
+    {
       version: 'v1.0.15',
       date: '2026-08-09',
       type: 'Client-Side Storage Quota Optimization & Raw Telemetry IndexedDB Offloading',
@@ -598,16 +747,16 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
             <div className={`p-3 rounded-xl border font-mono font-bold text-lg ${
               isDark ? 'bg-[#8B9DFF]/15 border-[#8B9DFF]/30 text-[#8B9DFF]' : 'bg-indigo-50 border-indigo-200 text-indigo-800'
             }`}>
-              v1.0.15
+              v1.0.20
             </div>
             <div>
               <h3 className="text-base font-bold">Field Service Operations System</h3>
               <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
-                Cloudflare Workers Runtime v1.0.15 — Native Cloud Engine & D1 Sync Foundation
+                Cloudflare Workers Runtime v1.0.20 — Native Cloud Engine & D1 Sync Foundation
               </p>
             </div>
           </div>
-          <Badge variant="blue">v1.0.15 OPERATIONAL</Badge>
+          <Badge variant="blue">v1.0.20 OPERATIONAL</Badge>
         </div>
       </Card>
 
@@ -621,7 +770,7 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
               <Tag className="w-3.5 h-3.5 text-[#8B9DFF]" />
               <span className="font-mono uppercase text-[10px]">Version</span>
             </div>
-            <p className="font-mono font-bold text-sm text-[#8B9DFF]">v1.0.15</p>
+            <p className="font-mono font-bold text-sm text-[#8B9DFF]">v1.0.20</p>
           </div>
 
           <div className={`p-3.5 rounded-xl border space-y-1 ${

@@ -6,6 +6,7 @@ export type NavigationTab =
   | 'planner'
   | 'customers'
   | 'machines'
+  | 'mhc_autopilot'
   | 'mhc'
   | 'mhc_templates'
   | 'mhc_history'
@@ -536,6 +537,12 @@ export interface MHCLaserHourItem {
   criticalThreshold: number;
   runtimeStatus: 'NORMAL' | 'WARNING' | 'CRITICAL';
   customFields?: MHCCustomField[];
+  // Phase 3A Autopilot Verification extensions
+  isVerified?: boolean;
+  verifiedHour?: number;
+  originalSourceHour?: number;
+  verificationNotes?: string;
+  verifiedAt?: string;
 }
 
 export interface MHCLaserProfileData {
@@ -549,6 +556,7 @@ export interface MHCLaserProfileData {
   customFields?: MHCCustomField[];
   customBlocks?: MHCCustomInfoBlock[];
   customImages?: MHCCustomImageItem[];
+  beamProfileRecord?: import('./beamProfile').BeamProfileCheckRecord;
 }
 
 export interface MHCLaserPowerItem {
@@ -564,6 +572,7 @@ export interface MHCLaserPowerItem {
   evidenceImages: string[];
   customFields?: MHCCustomField[];
   customMeasurements?: MHCCustomMeasurementItem[];
+  powerRecord?: import('./laserPower').LaserPowerCheckRecord;
 }
 
 export interface MHCOpticsBeamData {
@@ -636,6 +645,114 @@ export interface MHCEngineerRemarksData {
   productionReleaseVerdict: 'APPROVED' | 'CONDITIONAL_RELEASE' | 'HALTED';
 }
 
+export type MHCActivityStatus = 'LOCKED' | 'UPCOMING' | 'IN_PROGRESS' | 'COMPLETED' | 'NEEDS_REVIEW';
+
+export interface MHCAutopilotSessionProgress {
+  currentDay: 'DAY 1' | 'DAY 2' | 'DAY 3' | 'DAY 4';
+  currentActivityCode: string;
+  activityStatuses: Record<string, MHCActivityStatus>;
+  activityNotes?: Record<string, string>;
+  readinessScore?: number;
+  isReadOnly?: boolean;
+  lastActiveTimestamp?: string;
+}
+
+export interface MHCInspectionFindingItem {
+  id: string;
+  headId: string; // 'lh1' | 'lh2' or custom head ID
+  headName: string; // 'Laser Head 1' | 'Laser Head 2'
+  component: string;
+  isCustomComponent?: boolean;
+  conditions: string[];
+  customConditionDetail?: string;
+  actionRecommendation: 'Clean' | 'Monitor' | 'Recommended replacement' | 'Replacement required' | 'Other' | string;
+  engineerNote?: string;
+  evidenceImage?: string;
+  aiGeneratedWording?: string;
+  createdAt: string;
+}
+
+export interface MHCHeadInspectionState {
+  headId: string;
+  headName: string;
+  decision: 'UNANSWERED' | 'NO_ISSUE' | 'ISSUE_FOUND';
+  findings: MHCInspectionFindingItem[];
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'NEEDS_REVIEW';
+  updatedAt?: string;
+}
+
+export interface MHCStageCalibrationResult {
+  stageId: string; // 'stage1' | 'stage2'
+  stageName: string; // 'Stage 1' | 'Stage 2'
+  xMinUm: number | null;
+  xMaxUm: number | null;
+  yMinUm: number | null;
+  yMaxUm: number | null;
+  maxAbsXUm?: number;
+  maxAbsYUm?: number;
+  overallMaxDevUm?: number;
+  specToleranceUm: number; // 2.0
+  verdict: 'PASS' | 'OUT_OF_SPEC' | 'UNANSWERED';
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'NEEDS_REVIEW';
+  evidenceImage?: string;
+  engineerNote?: string;
+  updatedAt?: string;
+}
+
+export interface MHCAgcIndexItem {
+  indexNum: number; // 0, 1, 2, 3, 4, 5
+  xUm: number | null;
+  yUm: number | null;
+  specToleranceUm: number; // 3.0
+  verdict: 'PASS' | 'OUT_OF_SPEC' | 'UNANSWERED';
+  engineerNote?: string;
+}
+
+export interface MHCAgcResult {
+  agcId: string; // 'agc1' | 'agc2'
+  agcName: string; // 'AGC 1' | 'AGC 2'
+  indices: MHCAgcIndexItem[];
+  maxAbsXUm?: number;
+  maxAbsYUm?: number;
+  overallMaxDevUm?: number;
+  specToleranceUm: number; // 3.0
+  verdict: 'PASS' | 'OUT_OF_SPEC' | 'UNANSWERED';
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'NEEDS_REVIEW';
+  scannerConditionFlag?: boolean;
+  evidenceImage?: string;
+  engineerNote?: string;
+  updatedAt?: string;
+}
+
+export interface MHCEvidenceItem {
+  id: string;
+  category: 'temperature_result' | 'inspection_image' | 'calibration_evidence' | 'other_evidence';
+  title: string;
+  imageDataUrl?: string;
+  referenceId?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface MHCTemperatureEvidenceData {
+  temperatureRecordId?: string;
+  temperatureRecordTitle?: string;
+  temperatureLogFileName?: string;
+  rawRecordsCount?: number;
+  stats?: {
+    min: number;
+    max: number;
+    avg: number;
+    range: number;
+    points: number;
+  };
+  channelStats?: Record<number, { min: number; max: number; avg: number; range: number; points: number }>;
+  hasValidTemperatureAnalysis: boolean;
+  evidences?: MHCEvidenceItem[];
+  engineerNote?: string;
+  updatedAt?: string;
+}
+
 export interface MHCSession {
   id: string;
   machineId: string;
@@ -653,6 +770,7 @@ export interface MHCSession {
   completedDate?: string;
   currentSection: number;
   sectionStatuses: Record<string, 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED'>;
+  autopilotProgress?: MHCAutopilotSessionProgress;
   stage01_laserHours: MHCLaserHourItem[];
   stage02_laserProfile: MHCLaserProfileData;
   stage03_laserPower: MHCLaserPowerItem[];
@@ -661,6 +779,10 @@ export interface MHCSession {
   stage06_productQuality: MHCProductQualityData;
   stage07_spareParts: MHCSparePartItem[];
   stage08_engineerRemarks: MHCEngineerRemarksData;
+  inspectionFindings?: Record<string, MHCHeadInspectionState>;
+  stageCalibrationData?: Record<string, MHCStageCalibrationResult>;
+  agcData?: Record<string, MHCAgcResult>;
+  temperatureEvidenceData?: MHCTemperatureEvidenceData;
   fieldLabelOverrides?: Record<string, string>;
   deletedFieldKeys?: string[];
 }
@@ -755,4 +877,6 @@ export interface MhcWorkspaceDraft {
   widgets: SmartMhcWidget[];
   sessionSnapshot?: MHCSession;
 }
+
+export * from './mhcReportDocument';
 

@@ -33,7 +33,7 @@ import {
   Thermometer,
   Aperture
 } from 'lucide-react';
-import { Machine, MHCRecord, ExecutiveReport, Customer } from '../../types';
+import { Machine, MHCRecord, Customer } from '../../types';
 import { MachineTemperatureWorkspace } from './MachineTemperatureWorkspace';
 import { MachineLaserPowerWorkspace } from './MachineLaserPowerWorkspace';
 import { MachineBeamProfileWorkspace } from './MachineBeamProfileWorkspace';
@@ -61,7 +61,6 @@ interface MachinePassportProps {
   selectedMachineId: string;
   onSelectMachine: (id: string) => void;
   mhcRecords: MHCRecord[];
-  reports: ExecutiveReport[];
   onOpenMhcForMachine: (machineId: string) => void;
   onAddMachine?: (machine: Machine) => void;
   onEditMachine?: (machine: Machine) => void;
@@ -78,7 +77,6 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
   selectedMachineId,
   onSelectMachine,
   mhcRecords,
-  reports,
   onOpenMhcForMachine,
   onAddMachine,
   onEditMachine,
@@ -737,7 +735,6 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
   });
 
   const machineMhcs = selectedMachine ? mhcRecords.filter((r) => r.machineId === selectedMachine.id) : [];
-  const machineReports = selectedMachine ? reports.filter((r) => r.serialNumber === selectedMachine.serialNumber) : [];
 
   // Fleet Navigator Handlers
   const currentIndex = selectedMachine ? machines.findIndex((m) => m.id === selectedMachine.id) : -1;
@@ -2847,8 +2844,13 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Accuracy Rating:</span>
-                  <span className="font-bold">{evalRating}</span>
+                  <span className="font-bold">{evalRating.rating}</span>
                 </div>
+                {evalRating.warningMsg && (
+                  <div className="text-[11px] text-amber-500 font-semibold pt-1">
+                    {evalRating.warningMsg}
+                  </div>
+                )}
               </div>
 
               {/* Footer Actions */}

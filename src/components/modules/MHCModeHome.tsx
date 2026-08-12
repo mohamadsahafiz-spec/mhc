@@ -18,7 +18,7 @@ import {
   Building2,
   ChevronRight
 } from 'lucide-react';
-import { Machine, MHCRecord, ExecutiveReport } from '../../types';
+import { Machine, MHCRecord } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { HealthGauge } from '../common/HealthGauge';
 import { Button } from '../common/Button';
@@ -26,22 +26,18 @@ import { Button } from '../common/Button';
 interface MHCModeHomeProps {
   machines: Machine[];
   mhcRecords: MHCRecord[];
-  reports: ExecutiveReport[];
   selectedMachineId: string;
   onSelectMachine: (id: string) => void;
   onOpenMhcInspection: (machineId: string) => void;
-  onViewReport: (reportId: string) => void;
   onAddMachine?: () => void;
 }
 
 export const MHCModeHome: React.FC<MHCModeHomeProps> = ({
   machines,
   mhcRecords,
-  reports,
   selectedMachineId,
   onSelectMachine,
   onOpenMhcInspection,
-  onViewReport,
   onAddMachine
 }) => {
   const { effectiveTheme } = useTheme();
@@ -52,10 +48,6 @@ export const MHCModeHome: React.FC<MHCModeHomeProps> = ({
   // Find recent MHC records for selected machine
   const machineRecords = selectedMachine ? mhcRecords.filter((r) => r.machineId === selectedMachine.id) : [];
   const latestRecord = machineRecords[0];
-
-  // Find recent reports for selected machine
-  const machineReports = selectedMachine ? reports.filter((r) => r.serialNumber === selectedMachine.serialNumber) : [];
-  const latestReport = machineReports[0];
 
   // Workflow steps pipeline definition
   const workflowSteps = [
@@ -242,46 +234,14 @@ export const MHCModeHome: React.FC<MHCModeHomeProps> = ({
 
                 <div className="flex flex-wrap items-center gap-3 shrink-0">
                   {/* Action 1: Continue or Start MHC */}
-                  {latestRecord ? (
-                    <Button
-                      variant="primary"
-                      size="md"
-                      icon={<Play className="w-4 h-4 fill-current" />}
-                      onClick={() => onOpenMhcInspection(selectedMachine.id)}
-                    >
-                      Continue MHC Inspection
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      size="md"
-                      icon={<Play className="w-4 h-4 fill-current" />}
-                      onClick={() => onOpenMhcInspection(selectedMachine.id)}
-                    >
-                      Start New MHC Inspection
-                    </Button>
-                  )}
-
-                  {/* Action 2: View Report if available */}
-                  {latestReport ? (
-                    <Button
-                      variant="secondary"
-                      size="md"
-                      icon={<FileText className="w-4 h-4 text-indigo-400" />}
-                      onClick={() => onViewReport(latestReport.id)}
-                    >
-                      View Executive Report
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      size="md"
-                      icon={<Plus className="w-4 h-4" />}
-                      onClick={() => onOpenMhcInspection(selectedMachine.id)}
-                    >
-                      Start Fresh MHC
-                    </Button>
-                  )}
+                  <Button
+                    variant="primary"
+                    size="md"
+                    icon={<Play className="w-4 h-4 fill-current" />}
+                    onClick={() => onOpenMhcInspection(selectedMachine.id)}
+                  >
+                    {latestRecord ? 'Continue MHC Workspace' : 'Start Smart MHC Workspace'}
+                  </Button>
                 </div>
               </div>
             </div>
