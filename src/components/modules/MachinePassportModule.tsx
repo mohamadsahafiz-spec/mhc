@@ -38,7 +38,6 @@ import { MachineTemperatureWorkspace } from './MachineTemperatureWorkspace';
 import { MachineLaserPowerWorkspace } from './MachineLaserPowerWorkspace';
 import { MachineBeamProfileWorkspace } from './MachineBeamProfileWorkspace';
 import { MachineProductProcessWorkspace } from './MachineProductProcessWorkspace';
-import { INITIAL_CUSTOMERS } from '../../data/mockData';
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
@@ -353,23 +352,7 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
     showAlert(`New laser head "${newLaserHead.name}" added to machine.`);
   };
 
-  // Customer List State
-  const [customerList, setCustomerList] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('fsos_customer_list');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        // Fallback to initial
-      }
-    }
-    return INITIAL_CUSTOMERS;
-  });
-
-  // Persist Customer List to LocalStorage
-  React.useEffect(() => {
-    localStorage.setItem('fsos_customer_list', JSON.stringify(customerList));
-  }, [customerList]);
+  const customerSource = propsCustomers || [];
 
   // Toast / System Alert Notice
   const [systemAlert, setSystemAlert] = useState<string | null>(null);
@@ -395,8 +378,8 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
       status: 'OPTIMAL' | 'WARNING' | 'CRITICAL';
     }>();
 
-    // Seed customer records from customerList
-    customerList.forEach((c) => {
+    // Seed customer records from authoritative customerSource
+    customerSource.forEach((c) => {
       map.set(c.id, {
         id: c.id,
         name: c.name,
@@ -465,19 +448,19 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
     });
 
     return Array.from(map.values());
-  }, [customerList, machines]);
+  }, [customerSource, machines]);
 
   // Active Selected Customer State
   const [activeCustomerId, setActiveCustomerId] = useState<string>(() => {
-    return selectedMachine?.customerId || customerList[0]?.id || 'cust-1';
+    return selectedMachine?.customerId || customerSource[0]?.id || '';
   });
 
   // Sync active customer if selectedMachine changes externally
   React.useEffect(() => {
-    if (selectedMachine?.customerId && customerList.some(c => c.id === selectedMachine.customerId)) {
+    if (selectedMachine?.customerId && customerSource.some(c => c.id === selectedMachine.customerId)) {
       setActiveCustomerId(selectedMachine.customerId);
     }
-  }, [selectedMachine?.id, selectedMachine?.customerId, customerList]);
+  }, [selectedMachine?.id, selectedMachine?.customerId, customerSource]);
 
   const activeCustomer = customers.find((c) => c.id === activeCustomerId) || customers[0];
 
@@ -593,7 +576,6 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
       plantsCount: 1,
       activeContractsCount: 1
     };
-    setCustomerList((prev) => [...prev, newCust]);
     if (onAddCustomer) onAddCustomer(newCust);
     setActiveCustomerId(newCust.id);
     setIsAddCustomerModalOpen(false);
@@ -624,9 +606,6 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
       email: custForm.email.trim(),
       phone: custForm.phone.trim()
     };
-    setCustomerList((prev) =>
-      prev.map((c) => (c.id === customerToEdit.id ? updatedCust : c))
-    );
     if (onEditCustomer) onEditCustomer(updatedCust);
     setIsEditCustomerModalOpen(false);
     showAlert(`Customer account "${updatedName}" updated successfully.`);
@@ -643,9 +622,6 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
     if (!customerToEdit || !custForm.name.trim()) return;
     const updatedName = custForm.name.trim();
     const updatedCust: Customer = { ...customerToEdit, name: updatedName };
-    setCustomerList((prev) =>
-      prev.map((c) => (c.id === customerToEdit.id ? updatedCust : c))
-    );
     if (onEditCustomer) onEditCustomer(updatedCust);
     setIsRenameCustomerModalOpen(false);
     showAlert(`Customer account renamed to "${updatedName}".`);
@@ -674,11 +650,10 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
       return;
     }
 
-    setCustomerList((prev) => prev.filter((c) => c.id !== deletedId));
     if (onDeleteCustomer) onDeleteCustomer(deletedId);
 
     if (activeCustomerId === deletedId) {
-      const remaining = customerList.filter((c) => c.id !== deletedId);
+      const remaining = customerSource.filter((c) => c.id !== deletedId);
       if (remaining.length > 0) {
         setActiveCustomerId(remaining[0].id);
       }
@@ -705,9 +680,9 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
     model: '',
     machineNumber: '',
     serialNumber: '',
-    customerName: 'TSMC Microelectronics Fab 18',
-    plantName: 'Tainan Cleanroom Fab 18A',
-    productionLineName: 'Line 4 - Sub-3nm Silicon Annealing',
+    customerName: '',
+    plantName: '',
+    productionLineName: '',
     status: 'OPERATIONAL' as Machine['status'],
     healthScore: 98,
     installationDate: new Date().toISOString().split('T')[0],
@@ -781,14 +756,14 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
 
   // Handlers
   const handleOpenAdd = () => {
-    const activeCust = customerList.find((c) => c.id === activeCustomerId) || customerList[0];
+    const activeCust = customerSource.find((c) => c.id === activeCustomerId) || customerSource[0];
     setAddForm({
       model: '',
       machineNumber: `MCH-${Math.floor(100 + Math.random() * 900)}`,
       serialNumber: `SN-TRU-${Math.floor(100000 + Math.random() * 900000)}`,
-      customerName: activeCust?.name || selectedMachine?.customerName || 'TSMC Microelectronics Fab 18',
-      plantName: activeCust?.site || selectedMachine?.plantName || 'Tainan Cleanroom Fab 18A',
-      productionLineName: selectedMachine?.productionLineName || 'Line 4 - Sub-3nm Silicon Annealing',
+      customerName: activeCust?.name || selectedMachine?.customerName || '',
+      plantName: activeCust?.site || selectedMachine?.plantName || '',
+      productionLineName: selectedMachine?.productionLineName || '',
       status: 'OPERATIONAL',
       healthScore: 98,
       installationDate: new Date().toISOString().split('T')[0],
@@ -800,9 +775,9 @@ export const MachinePassportModule: React.FC<MachinePassportProps> = ({
 
   const handleSaveAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    const activeCust = customerList.find((c) => c.id === activeCustomerId) || customerList[0];
-    const targetCustId = activeCust?.id || 'cust-1';
-    const targetCustName = addForm.customerName || activeCust?.name || 'TSMC Microelectronics Fab 18';
+    const activeCust = customerSource.find((c) => c.id === activeCustomerId) || customerSource[0];
+    const targetCustId = activeCust?.id || '';
+    const targetCustName = addForm.customerName || activeCust?.name || 'Customer Account';
 
     const newMachine: Machine = {
       id: `mch-${Date.now()}`,

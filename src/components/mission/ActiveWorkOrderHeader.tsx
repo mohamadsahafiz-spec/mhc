@@ -11,17 +11,28 @@ interface ActiveWorkOrderHeaderProps {
   onOpenQuickMhc: () => void;
   engineerName?: string;
   avatarUrl?: string;
+  customerName?: string;
+  plantName?: string;
+  machineName?: string;
+  machineNumber?: string;
 }
 
 export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
   onNavigate,
   onOpenQuickMhc,
   engineerName = 'Sahafiz',
-  avatarUrl
+  avatarUrl,
+  customerName,
+  plantName,
+  machineName,
+  machineNumber
 }) => {
   const { effectiveTheme } = useTheme();
   const isDark = effectiveTheme === 'dark';
   const themeCls = getThemeClasses(isDark);
+
+  const hasMachine = Boolean(machineName || machineNumber);
+  const hasCustomer = Boolean(customerName);
 
   return (
     <div className={`p-6 md:p-7 rounded-2xl border transition-all duration-250 ${
@@ -44,7 +55,7 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
             <span className={`text-[10px] font-mono tracking-wider font-bold uppercase block mb-0.5 ${
               isDark ? 'text-[#8B9DFF]' : 'text-indigo-700'
             }`}>
-              WORK ORDER #WO-20260729-TSMC
+              {hasMachine ? `WORK ORDER #WO-${machineNumber || 'READY'}` : 'FIELD SERVICE MISSION CONTROL'}
             </span>
             <h1 className="text-lg md:text-xl font-bold tracking-tight">
               Good morning, {engineerName}
@@ -57,9 +68,9 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
             isDark ? 'bg-[#7FD4A6]/10 text-[#7FD4A6] border border-[#7FD4A6]/30' : 'bg-emerald-50 text-emerald-800 border border-emerald-300'
           }`}>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            SLA-TSMC-2026 (99.8% Target)
+            {hasCustomer ? `SLA ACTIVE (${customerName})` : 'STANDARD SERVICE MODE'}
           </span>
-          <span className={isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}>Est. Completion: 11:30 AM UTC</span>
+          <span className={isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}>System Ready</span>
         </div>
       </div>
 
@@ -76,9 +87,11 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
                 CUSTOMER
               </span>
               <p className={`text-sm font-bold ${isDark ? 'text-[#8ECDF7]' : 'text-sky-800'}`}>
-                TSMC — Taiwan Semiconductor
+                {customerName || 'No Active Customer'}
               </p>
-              <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>Fab 18A Cleanroom • Bay 4</p>
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
+                {plantName || 'Add Customer in Customer Passport'}
+              </p>
             </div>
 
             {/* Machine */}
@@ -89,9 +102,11 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
                 TARGET MACHINE
               </span>
               <p className={`text-sm font-bold ${isDark ? 'text-[#8B9DFF]' : 'text-indigo-800'}`}>
-                TRUMPF TruMicro 7000 Series
+                {machineName || 'No Active Machine'}
               </p>
-              <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>SN: TRU-7070-8841 (MCH-TSMC-01)</p>
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600 font-medium'}`}>
+                {machineNumber ? `ID: ${machineNumber}` : 'Add Machine in Machine Passport'}
+              </p>
             </div>
           </div>
 
@@ -103,7 +118,9 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
               TODAY'S MISSION
             </span>
             <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-800 font-medium'}`}>
-              Q3 Scheduled SLA Maintenance & DI Water Cooling Filter Replacement. Swap filter cartridge and execute 8-Point MHC prior to 14:00 UTC wafer annealing release.
+              {hasMachine 
+                ? `Perform active service inspection and 8-Point Machine Health Check for ${machineName} (${machineNumber}).`
+                : 'Operational workspace initialized in clean state. Register customer accounts and laser machines to execute service missions.'}
             </p>
           </div>
         </div>
@@ -114,14 +131,14 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
         }`}>
           <div>
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
-              CURRENT STAGE
+              STATUS
             </span>
             <div className="flex items-center gap-2 text-sm font-semibold text-[#8B9DFF]">
               <span className="w-2 h-2 rounded-full bg-[#8B9DFF]" />
-              Stage 3 of 5: Galvo Realignment
+              {hasMachine ? 'Service Check Ready' : 'Awaiting Equipment Registration'}
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              Filter swap complete. Servo gain latency check active.
+              {hasMachine ? 'All laser diagnostic sub-engines initialized.' : 'Create new machine records to unlock automated MHC inspections.'}
             </p>
           </div>
 
@@ -132,7 +149,7 @@ export const ActiveWorkOrderHeader: React.FC<ActiveWorkOrderHeaderProps> = ({
             icon={<Play className="w-4 h-4 fill-current" />}
             onClick={onOpenQuickMhc}
           >
-            <span>Execute Stage 3 Check</span>
+            <span>Execute MHC Scan</span>
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>

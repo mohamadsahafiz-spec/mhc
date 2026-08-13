@@ -53,7 +53,7 @@ export const InspectionStageStepper: React.FC<InspectionStageStepperProps> = ({
       title: 'Executive Report & Sign-off',
       time: 'Pending Stage 4',
       status: 'pending' as const,
-      description: 'Generate PDF report and request TSMC Fab 18A manager digital signature.'
+      description: 'Generate PDF report and request plant manager digital signature.'
     }
   ];
 

@@ -32,39 +32,47 @@ export const CustomersPlantsModule: React.FC<CustomersPlantsProps> = ({
   return (
     <div className="space-y-6 pb-12">
       {/* Customers Header Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {customers.map((cust) => {
-          const isSelected = cust.id === selectedCustomer?.id;
-          return (
-            <div
-              key={cust.id}
-              onClick={() => setSelectedCustomerId(cust.id)}
-              className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                isSelected
-                  ? isDark
-                    ? 'bg-[#1A1D21] border-[#8B9DFF] shadow-lg'
-                    : 'bg-blue-50 border-blue-500 shadow-md'
-                  : isDark
-                    ? 'bg-[#111315] border-[#2B323A] hover:bg-[#1A1D21]'
-                    : 'bg-white border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="cyan" size="sm">{cust.industry}</Badge>
-                <span className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{cust.plantsCount} Plants</span>
+      {customers.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Building2 className="w-10 h-10 text-indigo-400 mx-auto mb-3 opacity-60" />
+          <h3 className="text-base font-bold mb-1">No Customer Accounts</h3>
+          <p className="text-xs text-slate-500 mb-4">No customer records found. Add a customer in Machine Passport to begin.</p>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {customers.map((cust) => {
+            const isSelected = cust.id === selectedCustomer?.id;
+            return (
+              <div
+                key={cust.id}
+                onClick={() => setSelectedCustomerId(cust.id)}
+                className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                  isSelected
+                    ? isDark
+                      ? 'bg-[#1A1D21] border-[#8B9DFF] shadow-lg'
+                      : 'bg-blue-50 border-blue-500 shadow-md'
+                    : isDark
+                      ? 'bg-[#111315] border-[#2B323A] hover:bg-[#1A1D21]'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="cyan" size="sm">{cust.industry}</Badge>
+                  <span className={`text-xs font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{cust.plantsCount} Plants</span>
+                </div>
+                <h3 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{cust.name}</h3>
+                <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{cust.contactPerson}</p>
+                <div className={`mt-3 pt-2 border-t text-[11px] font-mono flex justify-between ${
+                  isDark ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-500'
+                }`}>
+                  <span>{cust.email}</span>
+                  <span>{cust.phone}</span>
+                </div>
               </div>
-              <h3 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{cust.name}</h3>
-              <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{cust.contactPerson}</p>
-              <div className={`mt-3 pt-2 border-t text-[11px] font-mono flex justify-between ${
-                isDark ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-500'
-              }`}>
-                <span>{cust.email}</span>
-                <span>{cust.phone}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Selected Customer Hierarchy Detail */}
       {selectedCustomer && (

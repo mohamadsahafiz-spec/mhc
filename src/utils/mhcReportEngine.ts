@@ -670,7 +670,7 @@ export function buildMhcReportDocument(
       { component: 'Beam Profile / Mode', verdict: beamProfileSection.status === 'COMPLETE' ? 'PASS' : 'WARNING', note: 'TEM00 Gaussian Mode' },
       { component: 'Stage Calibration', verdict: stageOverallVerdict === 'PASS' ? 'PASS' : stageOverallVerdict === 'OUT_OF_SPEC' ? 'FAIL' : 'NOT_COLLECTED', note: '±2.0 µm Tolerance' },
       { component: 'AGC / Scanner Calibration', verdict: agcOverallVerdict === 'PASS' ? 'PASS' : agcOverallVerdict === 'OUT_OF_SPEC' ? 'FAIL' : 'NOT_COLLECTED', note: '±3.0 µm Tolerance' },
-      { component: 'Temperature & Cooling', verdict: temperatureData.coolingResult === 'PASS' ? 'PASS' : 'WARNING', note: 'Thermal stability telemetry' }
+      { component: 'Temperature & Cooling', verdict: temperatureData.coolingResult === 'PASS' ? 'PASS' : temperatureData.coolingResult === 'FAIL' ? 'FAIL' : 'NOT_COLLECTED', note: 'Thermal stability telemetry' }
     ],
     replacementRecommendations: sparePartsList.map(s => `${s.partName} (${s.partNumber}) - ${s.action}`),
     importantObservations: sessionAudit.blockers.map(b => b.reason)
@@ -731,12 +731,37 @@ export function buildMhcReportDocument(
     buyoffSection
   ];
 
+  const getSectionPageNumber = (code: MhcReportSectionCode): number => {
+    switch (code) {
+      case '01': return 1;
+      case '02': return 2;
+      case '03': return 2;
+      case '04': return 3;
+      case '05': return 3;
+      case '06': return 4;
+      case '07': return 4;
+      case '08': return 4;
+      case '09': return 4;
+      case '10': return 5;
+      case '11': return 5;
+      case '12': return 5;
+      case '13': return 5;
+      case '14': return 5;
+      case '15': return 6;
+      case '16': return 6;
+      case '17': return 6;
+      case '18': return 6;
+      case '19': return 6;
+      default: return 1;
+    }
+  };
+
   const indexEntries: MhcReportIndexEntry[] = orderedSectionsList.map(sec => ({
     code: sec.code,
     title: sec.title,
     displayOrder: sec.displayOrder,
     category: getSectionCategory(sec.code),
-    pageNumber: null, // Assigned later by renderer
+    pageNumber: getSectionPageNumber(sec.code),
     isVisible: sec.isVisible,
     status: sec.status
   }));

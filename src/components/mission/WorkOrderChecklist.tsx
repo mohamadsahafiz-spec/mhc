@@ -38,7 +38,7 @@ export const WorkOrderChecklist: React.FC<WorkOrderChecklistProps> = ({
             WORK ORDER CHECKLIST
           </span>
           <h3 className="text-base font-bold">
-            Field Execution Checklist (#WO-20260729-TSMC)
+            Field Execution Checklist (#WO-EXECUTION)
           </h3>
         </div>
 

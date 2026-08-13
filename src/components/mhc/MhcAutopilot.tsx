@@ -276,7 +276,7 @@ export const MhcAutopilot: React.FC<MhcAutopilotProps> = ({
     const currentCode = progress.currentActivityCode;
     const savedNote = progress.activityNotes?.[currentCode] || '';
     setActiveNoteText(savedNote);
-  }, [progress.currentActivityCode, progress.activityNotes]);
+  }, [progress.currentActivityCode, progress.activityNotes?.[progress.currentActivityCode]]);
 
   // Handle Continue Existing Session
   const handleContinueExisting = () => {

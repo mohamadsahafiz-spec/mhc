@@ -40,7 +40,7 @@ export const MissionControl: React.FC<MissionControlProps> = ({
   onOpenQuickMhc,
   onSelectMachine
 }) => {
-  const currentMachine = machines.find(m => m.id === 'mch-101') || machines[0];
+  const currentMachine = machines[0];
 
   return (
     <div className="space-y-6 pb-12 transition-all duration-300">
@@ -48,6 +48,10 @@ export const MissionControl: React.FC<MissionControlProps> = ({
       <ActiveWorkOrderHeader 
         onNavigate={onNavigate}
         onOpenQuickMhc={onOpenQuickMhc}
+        customerName={currentMachine?.customerName}
+        plantName={currentMachine?.plantName}
+        machineName={currentMachine?.model}
+        machineNumber={currentMachine?.machineNumber}
       />
 
       {/* 2. Machine Snapshot Panel (Health, Heads, Cooling, Runtime, Remaining Life, Contract) */}

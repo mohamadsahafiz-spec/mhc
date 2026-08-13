@@ -15,6 +15,40 @@ export const SettingsModule: React.FC<SettingsProps> = ({ onResetData }) => {
 
   const changelog = [
     {
+      version: 'v1.0.31.4',
+      date: '2026-08-13',
+      type: 'Complete Operational Data Reset',
+      highlights: [
+        'COMPLETE OPERATIONAL DATA RESET: Fully cleared all runtime operational data (Customers, Machines, MHC Sessions, Reports, Contracts, Schedules, Tasks, Investigations, Plants, Lines, Evidence).',
+        'CLEAN EMPTY STATE: Application starts with zero customer and machine records, ensuring no ghost/fixture data (TSMC, Hyundai, ASML) is ever hydration-seeded.',
+        'ONE-TIME AUTOMATIC PURGE: Executed one-time localStorage and sync queue purge for v1.0.31.4 upgrade, resetting persistent state completely.',
+        'MANUAL ENTRY MANDATE: Customer Passport and Machine Passport render clean empty state prompting explicit manual equipment entry.',
+        'ENGINEERING ENGINES PRESERVED: Temperature Engine, Laser Power Engine, Beam Profile Engine, Calibration, Autopilot, Report Renderer, and calculations fully preserved.'
+      ]
+    },
+    {
+      version: 'v1.0.31.3',
+      date: '2026-08-13',
+      type: 'Customer Storage Authority Repair',
+      highlights: [
+        'SINGLE AUTHORITATIVE CUSTOMER PERSISTENCE: StorageService is now the single authoritative storage path for Customer data across FSOS.',
+        'REMOVED DUAL STORAGE AUTHORITY: Eliminated MachinePassportModule independent fsos_customer_list state and legacy storage key.',
+        'REMOVED RUNTIME FIXTURE FALLBACK: Discontinued INITIAL_CUSTOMERS runtime fallback; empty Customer store remains empty without generating ghost records.',
+        'SYNC ENGINE TOMBSTONE PROTECTION: Prevented stale fixture lists from enqueuing delete tombstones against legitimate Customer records.',
+        'SAFE DATA MIGRATION: Seamlessly migrated and merged any legitimate records from legacy fsos_customer_list before key removal.'
+      ]
+    },
+    {
+      version: 'v1.0.31.2',
+      date: '2026-08-13',
+      type: 'MHC Autopilot Render Loop Fix',
+      highlights: [
+        'MHC AUTOPILOT RENDER LOOP FIX: Resolved React infinite update loop caused by object reference dependency on progress.activityNotes in useEffect.',
+        'PRIMITIVE DEPENDENCY STABILIZATION: Updated useEffect dependency to primitive progress.activityNotes?.[currentCode] string.',
+        'FULL SYSTEM STABILITY: Verified startup, normal render, activity note persistence, and Customer/Machine Passport rendering without recursion.'
+      ]
+    },
+    {
       version: 'v1.0.28',
       date: '2026-08-12',
       type: 'Phase 7 — MHC Readiness Review (Day 4)',

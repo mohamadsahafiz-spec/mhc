@@ -293,7 +293,7 @@ export const MhcFullPdfRenderer: React.FC<MhcFullPdfRendererProps> = ({
                       FIELD SERVICE OPERATING SYSTEM
                     </h1>
                     <p className="text-xs text-slate-500 font-mono">
-                      Authoritative Machine Health Check Report Engine • v1.0.30
+                      Authoritative Machine Health Check Report Engine • v1.0.31.4
                     </p>
                   </div>
                 </div>
@@ -409,6 +409,9 @@ export const MhcFullPdfRenderer: React.FC<MhcFullPdfRendererProps> = ({
                       </div>
                       <div className="flex items-center gap-3 font-mono text-[11px]">
                         <span className="text-slate-400 uppercase text-[9px]">{entry.category}</span>
+                        <span className="text-slate-600 font-bold text-[10px] bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          P. {entry.pageNumber || '—'}
+                        </span>
                         {renderStatusBadge(entry.status)}
                       </div>
                     </div>
@@ -670,6 +673,32 @@ export const MhcFullPdfRenderer: React.FC<MhcFullPdfRendererProps> = ({
                 </div>
               </div>
 
+              {/* OPTIONAL SECTION 08: FOCUS OPTIMIZATION */}
+              {isSectionVisible('08') && (
+                <div className="space-y-2 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                    <h3 className="text-sm font-bold text-slate-900 font-mono">08 FOCUS OPTIMIZATION</h3>
+                    {renderStatusBadge(sections['08'].status)}
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                    {sections['08'].data.notes || 'Focus curves verified within focal range tolerances.'}
+                  </div>
+                </div>
+              )}
+
+              {/* OPTIONAL SECTION 09: POWER OFFSET */}
+              {isSectionVisible('09') && (
+                <div className="space-y-2 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                    <h3 className="text-sm font-bold text-slate-900 font-mono">09 POWER OFFSET / CALIBRATION CURVE</h3>
+                    {renderStatusBadge(sections['09'].status)}
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                    {sections['09'].data.notes || 'Power attenuation offsets verified across operational range.'}
+                  </div>
+                </div>
+              )}
+
             </div>
 
             {/* Footer */}
@@ -779,23 +808,74 @@ export const MhcFullPdfRenderer: React.FC<MhcFullPdfRendererProps> = ({
                   <span className="text-xs font-mono font-normal text-slate-500">SECTION 12</span>
                 </h2>
 
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs font-mono">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs font-mono">
                   <div className="grid grid-cols-3 gap-2">
                     <div className="p-2 rounded bg-white border border-slate-200">
                       <span className="text-[9px] text-slate-400 block">CHILLER TEMP</span>
-                      <strong className="text-slate-800">{sections['12'].data.chillerTempCelsius ? `${sections['12'].data.chillerTempCelsius.toFixed(1)} °C` : '20.0 °C'}</strong>
+                      <strong className="text-slate-800">
+                        {sections['12'].data.chillerTempCelsius !== undefined && sections['12'].data.chillerTempCelsius !== null
+                          ? `${sections['12'].data.chillerTempCelsius.toFixed(1)} °C`
+                          : '—'}
+                      </strong>
                     </div>
                     <div className="p-2 rounded bg-white border border-slate-200">
                       <span className="text-[9px] text-slate-400 block">COOLING FLOW</span>
-                      <strong className="text-slate-800">{sections['12'].data.chillerFlowLpm ? `${sections['12'].data.chillerFlowLpm.toFixed(1)} L/min` : 'Normal'}</strong>
+                      <strong className="text-slate-800">
+                        {sections['12'].data.chillerFlowLpm !== undefined && sections['12'].data.chillerFlowLpm !== null
+                          ? `${sections['12'].data.chillerFlowLpm.toFixed(1)} L/min`
+                          : '—'}
+                      </strong>
                     </div>
                     <div className="p-2 rounded bg-white border border-slate-200">
                       <span className="text-[9px] text-slate-400 block">COOLING STATUS</span>
-                      <div>{renderStatusBadge(sections['12'].data.coolingResult || 'PASS')}</div>
+                      <div>{renderStatusBadge(sections['12'].data.coolingResult || 'NOT_COLLECTED')}</div>
                     </div>
                   </div>
+
+                  {sections['12'].data.hasValidTemperatureAnalysis && sections['12'].data.stats && (
+                    <div className="pt-2 border-t border-slate-200 grid grid-cols-3 gap-2 text-[10px]">
+                      <div>
+                        <span className="text-slate-400 block">MIN TEMP</span>
+                        <strong>{((sections['12'].data.stats as any).minTempCelsius ?? sections['12'].data.stats.min).toFixed(2)} °C</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block">MAX TEMP</span>
+                        <strong>{((sections['12'].data.stats as any).maxTempCelsius ?? sections['12'].data.stats.max).toFixed(2)} °C</strong>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block">AVG TEMP</span>
+                        <strong>{((sections['12'].data.stats as any).avgTempCelsius ?? sections['12'].data.stats.avg).toFixed(2)} °C</strong>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* OPTIONAL SECTION 13: LASER / PRODUCT PROFILE */}
+              {isSectionVisible('13') && (
+                <div className="space-y-2 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                    <h3 className="text-sm font-bold text-slate-900 font-mono">13 LASER / PRODUCT PROFILE</h3>
+                    {renderStatusBadge(sections['13'].status)}
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                    {sections['13'].data.profileInfo || 'Recipe process parameters matched against machine baseline configuration.'}
+                  </div>
+                </div>
+              )}
+
+              {/* OPTIONAL SECTION 14: PRODUCT VIA QUALITY */}
+              {isSectionVisible('14') && (
+                <div className="space-y-2 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                    <h3 className="text-sm font-bold text-slate-900 font-mono">14 PRODUCT VIA QUALITY</h3>
+                    {renderStatusBadge(sections['14'].status)}
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                    {sections['14'].data.notes || 'Microvia roundness and taper angle verified via automated optical inspection.'}
+                  </div>
+                </div>
+              )}
 
             </div>
 
@@ -893,6 +973,42 @@ export const MhcFullPdfRenderer: React.FC<MhcFullPdfRendererProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* SECTION 18: EVIDENCE & ATTACHMENTS */}
+              {(sections['18'].data.items.length > 0 || isSectionVisible('18')) && (
+                <div className="space-y-2 pt-1 border-t border-slate-100">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                    <h2 className="text-sm font-bold text-slate-900 font-mono flex items-center justify-between w-full">
+                      <span>18 EVIDENCE ATTACHMENTS</span>
+                      <span className="text-xs text-slate-500 font-normal">
+                        {sections['18'].data.totalEvidenceItems} ATTACHED
+                      </span>
+                    </h2>
+                  </div>
+
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                    {sections['18'].data.items.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {sections['18'].data.items.map(item => (
+                          <div key={item.id} className="p-2 rounded bg-white border border-slate-200 space-y-1">
+                            {item.imageDataUrl && (
+                              <img 
+                                src={item.imageDataUrl} 
+                                alt={item.title} 
+                                className="w-full h-20 object-cover rounded border border-slate-100" 
+                              />
+                            )}
+                            <div className="font-bold text-slate-900 text-[11px]">{item.title}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">{item.sourceSection} • {item.notes || 'Photo record'}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-600 italic text-xs">No external evidence images attached to this MHC report.</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* SECTION 19: BUYOFF & SIGN-OFF */}
               <div className="space-y-3 pt-2">

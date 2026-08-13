@@ -174,7 +174,42 @@ function sanitizeMachine(m: Machine): Machine {
 }
 
 export const StorageService = {
-  getCustomers: (): Customer[] => getStorage(KEYS.CUSTOMERS, INITIAL_CUSTOMERS),
+  getCustomers: (): Customer[] => {
+    // Check if legacy 'fsos_customer_list' exists in localStorage
+    try {
+      const legacySaved = localStorage.getItem('fsos_customer_list');
+      const currentSaved = localStorage.getItem(KEYS.CUSTOMERS);
+
+      if (legacySaved && !currentSaved) {
+        const legacyCustomers: Customer[] = JSON.parse(legacySaved);
+        if (Array.isArray(legacyCustomers) && legacyCustomers.length > 0) {
+          setStorage(KEYS.CUSTOMERS, legacyCustomers);
+        }
+        localStorage.removeItem('fsos_customer_list');
+      } else if (legacySaved && currentSaved) {
+        const legacyCustomers: Customer[] = JSON.parse(legacySaved);
+        const currentCustomers: Customer[] = JSON.parse(currentSaved);
+        if (Array.isArray(legacyCustomers) && Array.isArray(currentCustomers)) {
+          const currentIds = new Set(currentCustomers.map((c) => c?.id));
+          let merged = false;
+          legacyCustomers.forEach((lc) => {
+            if (lc && lc.id && !currentIds.has(lc.id)) {
+              currentCustomers.push(lc);
+              merged = true;
+            }
+          });
+          if (merged) {
+            setStorage(KEYS.CUSTOMERS, currentCustomers);
+          }
+        }
+        localStorage.removeItem('fsos_customer_list');
+      }
+    } catch (e) {
+      console.error('[StorageService] Error migrating legacy customer data:', e);
+    }
+
+    return getStorage<Customer[]>(KEYS.CUSTOMERS, []);
+  },
   saveCustomers: (data: Customer[]) => {
     syncEnqueueList('customers', KEYS.CUSTOMERS, data);
     setStorage(KEYS.CUSTOMERS, data);

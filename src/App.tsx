@@ -74,7 +74,7 @@ function AppLayout() {
   const [profile, setProfile] = useState<EngineerProfile>(StorageService.getProfile());
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [users, setUsers] = useState<SystemUser[]>([]);
-  const [selectedMachineId, setSelectedMachineId] = useState<string>('mch-101');
+  const [selectedMachineId, setSelectedMachineId] = useState<string>('');
   const [activeUser, setActiveUser] = useState<SystemUser>({
     id: 'usr-8801',
     employeeId: 'EMP-EO-8801',
@@ -349,7 +349,9 @@ function AppLayout() {
     }
   };
 
-  const nextPriorityAction = "Execute DI Water Cooling Filter replacement & Q3 MHC on TRUMPF TruMicro 7000 (MCH-TSMC-01) at TSMC Fab 18A Cleanroom.";
+  const nextPriorityAction = machines.length > 0
+    ? `Execute scheduled maintenance on ${machines[0].model} (${machines[0].machineNumber})`
+    : "Awaiting Customer & Machine registration. Add equipment in Machine Passport to begin service.";
 
   if (!isAuthenticated) {
     return (
